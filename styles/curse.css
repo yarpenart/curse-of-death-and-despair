@@ -1,0 +1,306 @@
+.codd-card {
+  --codd-blood: #7f1018;
+  --codd-deep: #230b10;
+  --codd-gold: #d2aa62;
+  overflow: hidden;
+  border: 1px solid #5a2026;
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(127 16 24 / 22%), transparent 42%),
+    linear-gradient(145deg, #21181a, #100d0e);
+  color: #eee5dc;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 35%);
+}
+
+.codd-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgb(210 170 98 / 30%);
+  background: rgb(0 0 0 / 18%);
+}
+
+.codd-card__header img {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  filter: drop-shadow(0 0 6px rgb(188 24 38 / 55%));
+}
+
+.codd-card__header h3 {
+  margin: 0;
+  border: 0;
+  color: #f2d9b0;
+  font-family: var(--font-h4);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.codd-card__header span {
+  color: #c9bdb5;
+  font-size: 0.82rem;
+}
+
+.codd-card__body {
+  padding: 12px;
+}
+
+.codd-card__body p {
+  margin: 0 0 10px;
+  color: #e2d8d2;
+  line-height: 1.4;
+}
+
+.codd-rule,
+.codd-working {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 9px;
+  border-left: 3px solid var(--codd-gold);
+  background: rgb(210 170 98 / 8%);
+  color: #d9c6a4;
+  font-size: 0.85rem;
+}
+
+.codd-working {
+  justify-content: center;
+  border-left-color: #a52c36;
+  color: #e7c7c9;
+}
+
+.codd-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.codd-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 4%);
+}
+
+.codd-stat__label {
+  color: #aa9d96;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.codd-stat__value {
+  overflow-wrap: anywhere;
+  color: #f0e7df;
+  font-size: 0.86rem;
+}
+
+.codd-stat--success {
+  border-color: rgb(81 159 103 / 35%);
+}
+
+.codd-stat--success .codd-stat__value {
+  color: #a6d4ae;
+}
+
+.codd-stat--danger {
+  border-color: rgb(185 56 66 / 35%);
+}
+
+.codd-stat--danger .codd-stat__value {
+  color: #e7a2a8;
+}
+
+.codd-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.codd-result > i {
+  margin-top: 2px;
+  font-size: 1.15rem;
+}
+
+.codd-result > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.codd-result span {
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.codd-result--success {
+  border: 1px solid rgb(79 150 91 / 40%);
+  background: rgb(50 121 64 / 14%);
+  color: #b7dabd;
+}
+
+.codd-result--failure {
+  border: 1px solid rgb(189 48 60 / 45%);
+  background: rgb(127 16 24 / 20%);
+  color: #edb7bb;
+}
+
+.codd-death {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px;
+  border: 1px solid #c8222f;
+  border-radius: 4px;
+  background: rgb(153 0 15 / 28%);
+  color: #ffccd0;
+  font-weight: 700;
+}
+
+.codd-card__footer {
+  padding: 0 12px 12px;
+}
+
+.codd-action {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid #a8454e;
+  background: linear-gradient(#8d202a, #5d1219);
+  color: #fff2e4;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+}
+
+.codd-action:hover:not(:disabled),
+.codd-action:focus-visible:not(:disabled) {
+  border-color: #e6b970;
+  box-shadow: 0 0 7px rgb(210 170 98 / 40%);
+}
+
+.codd-action:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.65);
+  opacity: 0.6;
+}
+
+.codd-config {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.codd-config h2 {
+  margin: 6px 0 0;
+}
+
+.codd-config__schedule {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-light-2);
+  border-radius: 5px;
+  background: rgb(127 16 24 / 8%);
+}
+
+.codd-config__schedule > i {
+  color: #8e1d27;
+  font-size: 1.5rem;
+}
+
+.codd-config__schedule > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.codd-actor-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 265px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.codd-actor {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid var(--color-border-light-2);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.codd-actor:hover {
+  background: rgb(127 16 24 / 8%);
+}
+
+.codd-actor img {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.codd-actor__name {
+  overflow: hidden;
+  flex: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codd-tag {
+  padding: 2px 5px;
+  border-radius: 10px;
+  background: #755423;
+  color: #fff1ce;
+  font-size: 0.67rem;
+}
+
+.codd-actor__drained {
+  color: #a71f2b;
+}
+
+.codd-empty {
+  grid-column: 1 / -1;
+  padding: 12px;
+  text-align: center;
+}
+
+.codd-config__tools {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.codd-config__tools button {
+  min-height: 42px;
+  white-space: normal;
+}
+
+.codd-danger-button {
+  border-color: #8e1e27;
+  color: #8e1e27;
+}
+
+@media (max-width: 560px) {
+  .codd-stats,
+  .codd-actor-list,
+  .codd-config__tools {
+    grid-template-columns: 1fr;
+  }
+}

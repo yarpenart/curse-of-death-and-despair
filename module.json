@@ -1,0 +1,59 @@
+{
+  "id": "curse-of-death-and-despair",
+  "title": "Curse of Death and Despair",
+  "description": "A recurring, calendar-driven curse that drains ability scores after failed saving throws.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Karol Slomka"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13.351",
+    "maximum": "13"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "5.3.3",
+          "verified": "5.3.3"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "foundryvtt-simple-calendar-reborn",
+        "type": "module",
+        "compatibility": {
+          "minimum": "2.5.5"
+        }
+      },
+      {
+        "id": "dice-so-nice",
+        "type": "module"
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/module.js"
+  ],
+  "styles": [
+    "styles/curse.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "pl",
+      "name": "Polski",
+      "path": "lang/pl.json"
+    }
+  ]
+}

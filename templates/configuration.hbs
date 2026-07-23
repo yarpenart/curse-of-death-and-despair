@@ -1,0 +1,67 @@
+<form class="codd-config" autocomplete="off">
+  <section class="codd-config__schedule">
+    <i class="fa-solid fa-calendar-day"></i>
+    <div>
+      <strong>{{localize "CODD.Config.NextAttack"}}</strong>
+      <span>{{nextAttack}}</span>
+    </div>
+  </section>
+
+  <h2>{{localize "CODD.Config.Victims"}}</h2>
+  <p class="notes">{{localize "CODD.Config.VictimsHint"}}</p>
+
+  <div class="codd-actor-list">
+    {{#each actors}}
+      <label class="codd-actor">
+        <input type="checkbox" name="victims" value="{{id}}" {{checked selected}}>
+        <img src="{{img}}" alt="">
+        <span class="codd-actor__name">{{name}}</span>
+        {{#if paladin}}
+          <span class="codd-tag">{{localize "CODD.Config.PaladinTag"}}</span>
+        {{/if}}
+        {{#if effect}}
+          <i class="fa-solid fa-droplet codd-actor__drained" title="{{effect}}"></i>
+        {{/if}}
+      </label>
+    {{else}}
+      <p class="codd-empty">{{localize "CODD.Config.NoActors"}}</p>
+    {{/each}}
+  </div>
+
+  <div class="form-group">
+    <label for="codd-paladin">{{localize "CODD.Config.Paladin"}}</label>
+    <div class="form-fields">
+      <select id="codd-paladin" name="paladinActorId">
+        <option value="">{{localize "CODD.Config.PaladinAutomatic"}}</option>
+        {{#each paladins}}
+          <option value="{{id}}" {{#if chosen}}selected{{/if}}>
+            {{name}}{{#if paladin}} — {{localize "CODD.Config.PaladinTag"}}{{/if}}
+          </option>
+        {{/each}}
+      </select>
+    </div>
+    <p class="hint">{{localize "CODD.Config.PaladinHint"}}</p>
+  </div>
+
+  <section class="codd-config__tools">
+    <button type="button" data-action="test-now">
+      <i class="fa-solid fa-vial"></i>
+      {{localize "CODD.Config.TestNow"}}
+    </button>
+    <button type="button" data-action="reset-schedule">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      {{localize "CODD.Config.ResetSchedule"}}
+    </button>
+    <button type="button" data-action="remove-effects" class="codd-danger-button">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      {{localize "CODD.Config.RemoveEffects"}}
+    </button>
+  </section>
+
+  <footer class="sheet-footer flexrow">
+    <button type="submit">
+      <i class="fa-solid fa-floppy-disk"></i>
+      {{localize "CODD.Config.Save"}}
+    </button>
+  </footer>
+</form>
