@@ -79,6 +79,17 @@ function getSelectedVictims() {
     .filter(Boolean);
 }
 
+function getConfigurableActors() {
+  const worldActors = Array.isArray(game.actors?.contents)
+    ? game.actors.contents
+    : Array.from(game.actors ?? []);
+  const characters = worldActors.filter((actor) => actor?.type === "character");
+
+  // D&D5e characters are normally type "character". If a world uses a custom
+  // actor subtype, keep the configuration usable instead of showing a blank list.
+  return characters.length ? characters : worldActors;
+}
+
 function isPaladinActor(actor) {
   return actor?.items?.some((item) => {
     if (item.type !== "class") return false;
@@ -745,7 +756,7 @@ class CurseConfiguration extends FormApplication {
       id: `${MODULE_ID}-configuration`,
       title: localize("Config.Title"),
       template: `modules/${MODULE_ID}/templates/configuration.hbs`,
-      width: 680,
+      width: 560,
       height: "auto",
       closeOnSubmit: true
     });
@@ -754,26 +765,26 @@ class CurseConfiguration extends FormApplication {
   getData() {
     const selectedIds = new Set(getSelectedVictimIds());
     const selectedPaladinId = game.settings.get(MODULE_ID, "paladinActorId");
-    const actors = game.actors
-      .filter((actor) => actor.type === "character")
-      .sort((a, b) => a.name.localeCompare(b.name))
+    const availableActors = getConfigurableActors()
+      .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")))
       .map((actor) => ({
         id: actor.id,
-        name: actor.name,
-        img: actor.img,
+        name: actor.name ?? localize("Card.UnknownActor"),
+        img: actor.img ?? "icons/svg/mystery-man.svg",
         selected: selectedIds.has(actor.id),
         paladin: isPaladinActor(actor),
         effect: getManagedDrainEffect(actor)?.name ?? ""
       }));
 
-    const paladins = actors.map((actor) => ({
+    const paladins = availableActors.map((actor) => ({
       ...actor,
       chosen: actor.id === selectedPaladinId
     }));
 
     const nextTimestamp = Number(game.settings.get(MODULE_ID, "nextAttackTimestamp"));
     return {
-      actors,
+      availableActors,
+      hasAvailableActors: availableActors.length > 0,
       paladins,
       nextAttack: nextTimestamp
         ? formatCalendarTimestamp(nextTimestamp)

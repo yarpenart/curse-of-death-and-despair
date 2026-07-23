@@ -11,21 +11,23 @@
   <p class="notes">{{localize "CODD.Config.VictimsHint"}}</p>
 
   <div class="codd-actor-list">
-    {{#each actors}}
-      <label class="codd-actor">
-        <input type="checkbox" name="victims" value="{{id}}" {{checked selected}}>
-        <img src="{{img}}" alt="">
-        <span class="codd-actor__name">{{name}}</span>
-        {{#if paladin}}
-          <span class="codd-tag">{{localize "CODD.Config.PaladinTag"}}</span>
-        {{/if}}
-        {{#if effect}}
-          <i class="fa-solid fa-droplet codd-actor__drained" title="{{effect}}"></i>
-        {{/if}}
-      </label>
+    {{#if hasAvailableActors}}
+      {{#each availableActors}}
+        <label class="codd-actor">
+          <input type="checkbox" name="victims" value="{{id}}" {{checked selected}}>
+          <img src="{{img}}" alt="">
+          <span class="codd-actor__name">{{name}}</span>
+          {{#if paladin}}
+            <span class="codd-tag">{{localize "CODD.Config.PaladinTag"}}</span>
+          {{/if}}
+          {{#if effect}}
+            <i class="fa-solid fa-droplet codd-actor__drained" title="{{effect}}"></i>
+          {{/if}}
+        </label>
+      {{/each}}
     {{else}}
       <p class="codd-empty">{{localize "CODD.Config.NoActors"}}</p>
-    {{/each}}
+    {{/if}}
   </div>
 
   <div class="form-group">

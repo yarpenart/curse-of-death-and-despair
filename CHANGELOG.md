@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- Naprawiono niewidoczną listę ofiar w oknie konfiguracji.
+- Dodano tryb awaryjny dla światów używających niestandardowego typu aktora.
+- Zmniejszono szerokość konfiguratora i usunięto zbędną pustą przestrzeń listy.
+
 ## 0.1.0
 
 - Pierwsze wydanie.
