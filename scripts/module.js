@@ -1202,7 +1202,6 @@ class CurseConfiguration extends FormApplication {
     );
     const globalIntervalDays = getGlobalIntervalDays();
     const availableActors = getConfigurableActors()
-      .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")))
       .map((actor) => {
         const intervalInherited = !Object.hasOwn(victimIntervals, actor.id);
         const intervalDays = intervalInherited
@@ -1230,17 +1229,32 @@ class CurseConfiguration extends FormApplication {
           intervalDays,
           intervalInherited
         };
-      });
+      })
+      .sort((a, b) =>
+        Number(b.selected) - Number(a.selected)
+        || String(a.name).localeCompare(String(b.name))
+      );
 
-    const paladins = availableActors.map((actor) => ({
-      ...actor,
-      chosen: actor.id === selectedPaladinId
-    }));
+    const auraSources = [
+      {
+        id: "",
+        name: localize("Config.PaladinAutomatic"),
+        chosen: !selectedPaladinId,
+        paladin: false
+      },
+      ...availableActors.map((actor) => ({
+        ...actor,
+        chosen: actor.id === selectedPaladinId
+      }))
+    ].sort((a, b) =>
+      Number(b.chosen) - Number(a.chosen)
+      || String(a.name).localeCompare(String(b.name))
+    );
 
     return {
       availableActors,
       hasAvailableActors: availableActors.length > 0,
-      paladins,
+      auraSources,
       settings: {
         saveDC: Number(game.settings.get(MODULE_ID, "saveDC")) || 18,
         paladinChance: Number(game.settings.get(MODULE_ID, "paladinChance")) || 0,

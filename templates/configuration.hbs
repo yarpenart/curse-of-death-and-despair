@@ -123,8 +123,7 @@
     <label for="codd-paladin">{{localize "CODD.Config.Paladin"}}</label>
     <div class="form-fields">
       <select id="codd-paladin" name="paladinActorId">
-        <option value="">{{localize "CODD.Config.PaladinAutomatic"}}</option>
-        {{#each paladins}}
+        {{#each auraSources}}
           <option value="{{id}}" {{#if chosen}}selected{{/if}}>
             {{name}}{{#if paladin}} — {{localize "CODD.Config.PaladinTag"}}{{/if}}
           </option>

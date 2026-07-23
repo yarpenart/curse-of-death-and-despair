@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.7
+
+- W konfiguracji klątwy zapisane ofiary są wyświetlane na górze listy, a pozostałe postacie poniżej.
+- W obu grupach postacie zachowują kolejność alfabetyczną.
+- Aktualnie wybrane źródło aury jest pierwszą pozycją listy; przy wyborze automatycznym na górze pozostaje opcja automatyczna.
+
 ## 0.3.6
 
 - Każdy atak w Historii rzutów można niezależnie rozwinąć i zwinąć.
