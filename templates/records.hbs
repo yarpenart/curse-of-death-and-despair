@@ -1,0 +1,213 @@
+<form class="codd-records" autocomplete="off">
+  {{#if hasActors}}
+    <header class="codd-records__header">
+      <label>
+        <span>{{localize "CODD.Records.Victim"}}</span>
+        <select data-codd-record-actor>
+          {{#each actors}}
+            <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+          {{/each}}
+        </select>
+      </label>
+      {{#if selectedActor}}
+        <div class="codd-records__identity">
+          <img src="{{selectedActor.img}}" alt="">
+          <strong>{{selectedActor.name}}</strong>
+        </div>
+      {{/if}}
+    </header>
+
+    <section class="codd-summary">
+      {{#each summaryFields}}
+        <label class="codd-summary__item">
+          <span>{{label}}</span>
+          {{#if ../isGM}}
+            <input type="number" min="0" value="{{value}}" data-codd-summary="{{key}}">
+          {{else}}
+            <strong>{{value}}</strong>
+          {{/if}}
+        </label>
+      {{/each}}
+    </section>
+
+    {{#if showHistory}}
+    <section class="codd-records__section">
+      <div class="codd-section-heading">
+        <div>
+          <h2>{{localize "CODD.Records.History"}}</h2>
+          <p>{{localize "CODD.Records.HistoryHint"}}</p>
+        </div>
+        {{#if isGM}}
+          <button type="button" data-action="recalculate-summary">
+            <i class="fa-solid fa-calculator"></i>
+            {{localize "CODD.Records.Recalculate"}}
+          </button>
+        {{/if}}
+      </div>
+
+      {{#if hasEntries}}
+        <div class="codd-history">
+          {{#each entries}}
+            {{#if ../isGM}}
+              <article class="codd-history-editor" data-codd-record-row="{{id}}">
+                <header>
+                  <strong>{{dateLabel}}</strong>
+                  <button type="button" data-action="delete-record" title="{{localize "CODD.Records.Delete"}}">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </header>
+
+                <input type="hidden" value="{{scheduledTimestamp}}" data-field="scheduledTimestamp">
+                <input type="hidden" value="{{startedAt}}" data-field="startedAt">
+                <input type="hidden" value="{{resolvedAt}}" data-field="resolvedAt">
+
+                <div class="codd-history-editor__grid">
+                  <label>
+                    <span>{{localize "CODD.Records.ProximityRoll"}}</span>
+                    <input type="number" min="1" max="10" value="{{proximityRoll}}" data-field="proximityRoll">
+                  </label>
+                  <label class="codd-check-field">
+                    <input type="checkbox" {{checked proximityAutomatic}} data-field="proximityAutomatic">
+                    <span>{{localize "CODD.Records.AutomaticAura"}}</span>
+                  </label>
+                  <label class="codd-check-field">
+                    <input type="checkbox" {{checked paladinNear}} data-field="paladinNear">
+                    <span>{{localize "CODD.Records.PaladinNear"}}</span>
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.AuraBonus"}}</span>
+                    <input type="number" value="{{auraBonus}}" data-field="auraBonus">
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.AuraSource"}}</span>
+                    <input type="text" value="{{auraSource}}" data-field="auraSource">
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.AbilityRoll"}}</span>
+                    <input type="number" min="1" max="6" value="{{abilityRoll}}" data-field="abilityRoll">
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.AttackedAbility"}}</span>
+                    <select data-field="ability">
+                      <option value="">—</option>
+                      {{#each abilityOptions}}
+                        <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                      {{/each}}
+                    </select>
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.SaveTotal"}}</span>
+                    <input type="number" value="{{saveTotal}}" data-field="saveTotal">
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.NaturalD20"}}</span>
+                    <input type="number" min="1" max="20" value="{{naturalRoll}}" data-field="naturalRoll">
+                  </label>
+                  <label class="codd-check-field">
+                    <input type="checkbox" {{checked success}} data-field="success">
+                    <span>{{localize "CODD.Records.Success"}}</span>
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.LossRoll"}}</span>
+                    <input type="number" min="0" value="{{lossRolled}}" data-field="lossRolled">
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.LossApplied"}}</span>
+                    <input type="number" min="0" value="{{lossApplied}}" data-field="lossApplied">
+                  </label>
+                  <label>
+                    <span>{{localize "CODD.Records.RemainingScore"}}</span>
+                    <input type="number" min="0" value="{{remainingScore}}" data-field="remainingScore">
+                  </label>
+                </div>
+              </article>
+            {{else}}
+              <article class="codd-history-view" data-codd-record-row="{{id}}">
+                <header>
+                  <strong>{{dateLabel}}</strong>
+                  {{#if ../showRolls}}<span>{{outcomeLabel}}</span>{{/if}}
+                </header>
+                <dl>
+                  {{#if ../showPaladin}}
+                    <div>
+                      <dt>{{localize "CODD.Records.Paladin"}}</dt>
+                      <dd>{{proximityDisplay}}{{#if paladinNear}} · {{localize "CODD.Records.Near"}}{{else}} · {{localize "CODD.Records.Far"}}{{/if}}</dd>
+                    </div>
+                  {{/if}}
+                  {{#if ../showAbilities}}
+                    <div>
+                      <dt>{{localize "CODD.Records.AttackedAbility"}}</dt>
+                      <dd>{{abilityLabel}} · 1k6: {{abilityRoll}}</dd>
+                    </div>
+                  {{/if}}
+                  {{#if ../showRolls}}
+                    <div>
+                      <dt>{{localize "CODD.Records.RollResults"}}</dt>
+                      <dd>d20: {{naturalDisplay}} · {{localize "CODD.Records.Total"}}: {{saveDisplay}}</dd>
+                    </div>
+                  {{/if}}
+                  {{#if ../showLosses}}
+                    <div>
+                      <dt>{{localize "CODD.Records.LossApplied"}}</dt>
+                      <dd>{{localize "CODD.Records.LossRoll"}}: {{lossRolled}} · {{localize "CODD.Records.LossApplied"}}: {{lossDisplay}} · {{localize "CODD.Records.RemainingScore"}}: {{remainingScore}}</dd>
+                    </div>
+                  {{/if}}
+                </dl>
+              </article>
+            {{/if}}
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="codd-empty">{{localize "CODD.Records.NoHistory"}}</p>
+      {{/if}}
+    </section>
+    {{/if}}
+
+    {{#if isGM}}
+      <section class="codd-records__section codd-sharing">
+        <h2>{{localize "CODD.Records.Sharing"}}</h2>
+        <p>{{localize "CODD.Records.SharingHint"}}</p>
+        {{#if users.length}}
+          <div class="codd-sharing__list">
+            {{#each users}}
+              <section class="codd-sharing__user">
+                <strong>
+                  <i class="fa-solid {{#if active}}fa-circle codd-online{{else}}fa-circle codd-offline{{/if}}"></i>
+                  {{name}}
+                </strong>
+                <div>
+                  {{#each fields}}
+                    <label>
+                      <input
+                        type="checkbox"
+                        {{checked checked}}
+                        data-codd-share-user="{{../id}}"
+                        data-codd-share-field="{{key}}"
+                      >
+                      <span>{{label}}</span>
+                    </label>
+                  {{/each}}
+                </div>
+              </section>
+            {{/each}}
+          </div>
+        {{else}}
+          <p class="codd-empty">{{localize "CODD.Records.NoPlayers"}}</p>
+        {{/if}}
+      </section>
+
+      <footer class="sheet-footer flexrow">
+        <button type="submit">
+          <i class="fa-solid fa-floppy-disk"></i>
+          {{localize "CODD.Records.Save"}}
+        </button>
+      </footer>
+    {{/if}}
+  {{else}}
+    <section class="codd-records__empty">
+      <i class="fa-solid fa-book-skull"></i>
+      <h2>{{localize "CODD.Records.NoVisibleData"}}</h2>
+      <p>{{localize "CODD.Records.NoVisibleDataHint"}}</p>
+    </section>
+  {{/if}}
+</form>

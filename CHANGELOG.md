@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Przebudowano listę ofiar zgodnie z makietą: dodano wyszukiwarkę, osobny Roll Mode każdej ofiary oraz zachowano indywidualne pola daty.
+- Ofiara mająca co najmniej 6 poziomów paladyna automatycznie otrzymuje własną Aurę Ochrony i nie wykonuje testu bliskości.
+- Dodano trwałe statystyki i pełną historię rzutów osobno dla każdej ofiary.
+- Historia zachowuje wyniki testu paladyna, losowania cechy, save’a i utraty cechy, a także atakowaną cechę, premię aury oraz wynik ataku.
+- MG może edytować lub usuwać wpisy historii, poprawiać sumy i przeliczać je ponownie z zachowanych rzutów.
+- MG może udostępniać każdemu graczowi osobne kategorie danych konkretnej ofiary.
+- Dodano przypięty do interfejsu przycisk szybkiego dostępu do danych oraz, dla MG, do pełnej konfiguracji klątwy.
+- Ustawienia zasad klątwy są dostępne również w zwijanej sekcji konfiguratora.
+
 ## 0.2.0
 
 - Dodano wybór trybu widoczności rzutów postaci graczy.

@@ -10,20 +10,47 @@
   <h2>{{localize "CODD.Config.Victims"}}</h2>
   <p class="notes">{{localize "CODD.Config.VictimsHint"}}</p>
 
+  <label class="codd-search">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input
+      type="search"
+      placeholder="{{localize "CODD.Config.SearchPlaceholder"}}"
+      aria-label="{{localize "CODD.Config.SearchLabel"}}"
+      data-codd-search
+    >
+  </label>
+
   <div class="codd-actor-list">
     {{#if hasAvailableActors}}
       {{#each availableActors}}
-        <section class="codd-victim-row" data-codd-actor="{{id}}">
+        <section
+          class="codd-victim-row"
+          data-codd-actor="{{id}}"
+          data-codd-actor-name="{{name}}"
+        >
           <label class="codd-actor">
             <input type="checkbox" name="victims" value="{{id}}" {{checked selected}}>
             <img src="{{img}}" alt="">
             <span class="codd-actor__name">{{name}}</span>
             {{#if paladin}}
-              <span class="codd-tag">{{localize "CODD.Config.PaladinTag"}}</span>
+              <span class="codd-tag" title="{{localize "CODD.Config.PaladinLevel"}} {{paladinLevel}}">
+                {{localize "CODD.Config.PaladinTag"}} {{paladinLevel}}
+              </span>
             {{/if}}
             {{#if effect}}
               <i class="fa-solid fa-droplet codd-actor__drained" title="{{effect}}"></i>
             {{/if}}
+          </label>
+
+          <label class="codd-roll-mode-field">
+            <span>{{localize "CODD.Config.RollMode"}}</span>
+            <select data-codd-roll-mode data-codd-npc="{{npc}}">
+              {{#each rollModeOptions}}
+                <option value="{{value}}" {{#if selected}}selected{{/if}}>
+                  {{label}}
+                </option>
+              {{/each}}
+            </select>
           </label>
 
           <div class="codd-date-fields" title="{{schedule}}">
@@ -53,6 +80,39 @@
     {{/if}}
   </div>
 
+  <details class="codd-settings-panel">
+    <summary>
+      <i class="fa-solid fa-sliders"></i>
+      {{localize "CODD.Config.RuleSettings"}}
+    </summary>
+    <div class="codd-settings-grid">
+      <label>
+        <span>{{localize "CODD.Config.SaveDC"}}</span>
+        <input type="number" min="1" max="30" value="{{settings.saveDC}}" data-codd-setting="saveDC">
+      </label>
+      <label>
+        <span>{{localize "CODD.Config.PaladinChance"}}</span>
+        <input type="number" min="0" max="10" value="{{settings.paladinChance}}" data-codd-setting="paladinChance">
+      </label>
+      <label>
+        <span>{{localize "CODD.Config.FallbackAura"}}</span>
+        <input type="number" min="0" max="10" value="{{settings.fallbackAuraBonus}}" data-codd-setting="fallbackAuraBonus">
+      </label>
+      <label>
+        <span>{{localize "CODD.Config.IntervalDays"}}</span>
+        <input type="number" min="1" max="365" value="{{settings.intervalDays}}" data-codd-setting="intervalDays">
+      </label>
+      <label>
+        <span>{{localize "CODD.Config.LossFormula"}}</span>
+        <input type="text" value="{{settings.abilityLossFormula}}" data-codd-setting="abilityLossFormula">
+      </label>
+      <label>
+        <span>{{localize "CODD.Config.HealingPenalty"}}</span>
+        <input type="number" min="0" max="20" value="{{settings.spellHealingPenalty}}" data-codd-setting="spellHealingPenalty">
+      </label>
+    </div>
+  </details>
+
   <div class="form-group">
     <label for="codd-paladin">{{localize "CODD.Config.Paladin"}}</label>
     <div class="form-fields">
@@ -69,6 +129,10 @@
   </div>
 
   <section class="codd-config__tools">
+    <button type="button" data-action="open-records">
+      <i class="fa-solid fa-chart-column"></i>
+      {{localize "CODD.Config.OpenRecords"}}
+    </button>
     <button type="button" data-action="test-now">
       <i class="fa-solid fa-vial"></i>
       {{localize "CODD.Config.TestNow"}}

@@ -7,6 +7,15 @@ const SC_PRIMARY_GM_HOOK = "simple-calendar-primary-gm";
 const MAX_MISSED_CYCLES = 20;
 const RULES_JOURNAL_FLAG = "rulesJournal";
 const RULES_PAGE_FLAG = "rulesPage";
+const PALADIN_SELF_AURA_LEVEL = 6;
+const RECORD_SHARE_FIELDS = Object.freeze([
+  "totals",
+  "criticals",
+  "paladin",
+  "rolls",
+  "abilities",
+  "losses"
+]);
 
 const ABILITY_BY_D6 = Object.freeze({
   1: "str",
@@ -27,6 +36,8 @@ const ROLL_MODE_LABELS = Object.freeze({
 let calendarProcessing = false;
 let calendarHooksRegistered = false;
 let journalUpdateTimer = null;
+let configurationApplication = null;
+let recordsApplication = null;
 
 function localize(key) {
   return game.i18n.localize(`CODD.${key}`);
@@ -49,6 +60,13 @@ function escapeHtml(value) {
 
 function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function isFiniteValue(value) {
+  return value !== null
+    && value !== undefined
+    && value !== ""
+    && Number.isFinite(Number(value));
 }
 
 function getSimpleCalendar() {
@@ -106,14 +124,40 @@ function getConfigurableActors() {
 }
 
 function isPaladinActor(actor) {
-  return actor?.items?.some((item) => {
-    if (item.type !== "class") return false;
-    const identifier = String(item.system?.identifier ?? "").toLowerCase();
-    const name = String(item.name ?? "").toLowerCase();
-    return identifier === "paladin"
-      || name.includes("paladin")
-      || name.includes("paladyn");
-  });
+  return getPaladinLevel(actor) > 0;
+}
+
+function isPaladinClassItem(item) {
+  if (item?.type !== "class") return false;
+  const identifier = String(item.system?.identifier ?? "").toLowerCase();
+  const name = String(item.name ?? "").toLowerCase();
+  return identifier === "paladin"
+    || name.includes("paladin")
+    || name.includes("paladyn");
+}
+
+function getPaladinLevel(actor) {
+  return (actor?.items ?? []).reduce((total, item) => {
+    if (!isPaladinClassItem(item)) return total;
+    const levels = Number(item.system?.levels ?? item.system?.level ?? 0);
+    return total + (Number.isFinite(levels) ? Math.max(0, levels) : 0);
+  }, 0);
+}
+
+function hasSelfAura(actor) {
+  return getPaladinLevel(actor) >= PALADIN_SELF_AURA_LEVEL;
+}
+
+function getActorAuraDetails(actor) {
+  if (actor && hasSelfAura(actor)) {
+    const charismaModifier = Number(actor.system?.abilities?.cha?.mod ?? 0);
+    return {
+      bonus: Math.max(1, charismaModifier),
+      source: actor.name,
+      actorId: actor.id
+    };
+  }
+  return null;
 }
 
 function getConfiguredPaladin() {
@@ -155,12 +199,164 @@ function getAbilityLabel(abilityId) {
 
 function getRollModeForActor(actor) {
   if (actor?.type === "npc") return "blindroll";
+  const victimModes = getVictimRollModes();
+  const actorMode = String(victimModes[actor?.id] ?? "");
+  if (Object.hasOwn(ROLL_MODE_LABELS, actorMode)) return actorMode;
   const configured = String(game.settings.get(MODULE_ID, "rollMode") || "publicroll");
   return Object.hasOwn(ROLL_MODE_LABELS, configured) ? configured : "publicroll";
 }
 
 function getRollModeLabel(mode) {
   return localize(ROLL_MODE_LABELS[mode] ?? ROLL_MODE_LABELS.publicroll);
+}
+
+function getVictimRollModes() {
+  const value = game.settings.get(MODULE_ID, "victimRollModes");
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? foundry.utils.deepClone(value)
+    : {};
+}
+
+function getCurseRecords() {
+  const value = game.settings.get(MODULE_ID, "victimRecords");
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? foundry.utils.deepClone(value)
+    : {};
+}
+
+function getRecordShares() {
+  const value = game.settings.get(MODULE_ID, "victimRecordShares");
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? foundry.utils.deepClone(value)
+    : {};
+}
+
+function emptyRecordSummary() {
+  return {
+    attacks: 0,
+    saves: 0,
+    successes: 0,
+    naturalOnes: 0,
+    naturalTwenties: 0,
+    paladinNearby: 0
+  };
+}
+
+function normalizeRecordSummary(summary = {}) {
+  const normalized = emptyRecordSummary();
+  for (const key of Object.keys(normalized)) {
+    normalized[key] = Math.max(0, Math.floor(Number(summary[key]) || 0));
+  }
+  return normalized;
+}
+
+function normalizeVictimRecord(actorId, source = {}) {
+  return {
+    version: 1,
+    actorId,
+    summary: normalizeRecordSummary(source.summary),
+    entries: Array.isArray(source.entries)
+      ? source.entries.map((entry) => ({ ...entry }))
+      : []
+  };
+}
+
+function createRecordId() {
+  if (typeof foundry.utils.randomID === "function") return foundry.utils.randomID();
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+async function recordAttackDetermination(data) {
+  if (!isPrimaryGM()) return;
+
+  const records = getCurseRecords();
+  const victimRecord = normalizeVictimRecord(data.actorId, records[data.actorId]);
+  let entry = data.recordId
+    ? victimRecord.entries.find((candidate) => candidate.id === data.recordId)
+    : null;
+
+  if (!entry) {
+    data.recordId = createRecordId();
+    entry = {
+      id: data.recordId,
+      messageId: data.messageId ?? "",
+      scheduledTimestamp: Number(data.scheduledTimestamp) || 0,
+      startedAt: Date.now()
+    };
+    victimRecord.entries.push(entry);
+    victimRecord.summary.attacks += 1;
+    if (data.paladinNear) victimRecord.summary.paladinNearby += 1;
+  }
+
+  Object.assign(entry, {
+    proximityRoll: data.proximityAutomatic ? null : Number(data.proximityRoll),
+    proximityAutomatic: Boolean(data.proximityAutomatic),
+    paladinNear: Boolean(data.paladinNear),
+    auraBonus: Number(data.auraBonus) || 0,
+    auraSource: data.auraSource ?? "",
+    abilityRoll: Number(data.abilityRoll) || 0,
+    ability: data.ability ?? ""
+  });
+
+  records[data.actorId] = victimRecord;
+  await game.settings.set(MODULE_ID, "victimRecords", records);
+}
+
+async function recordSaveResolution(data) {
+  if (!isPrimaryGM()) return;
+
+  const records = getCurseRecords();
+  const victimRecord = normalizeVictimRecord(data.actorId, records[data.actorId]);
+  let entry = data.recordId
+    ? victimRecord.entries.find((candidate) => candidate.id === data.recordId)
+    : null;
+
+  if (!entry) {
+    data.recordId = createRecordId();
+    entry = {
+      id: data.recordId,
+      scheduledTimestamp: Number(data.scheduledTimestamp) || 0,
+      startedAt: Date.now(),
+      proximityRoll: data.proximityAutomatic ? null : Number(data.proximityRoll),
+      proximityAutomatic: Boolean(data.proximityAutomatic),
+      paladinNear: Boolean(data.paladinNear),
+      auraBonus: Number(data.auraBonus) || 0,
+      auraSource: data.auraSource ?? "",
+      abilityRoll: Number(data.abilityRoll) || 0,
+      ability: data.ability ?? ""
+    };
+    victimRecord.entries.push(entry);
+    victimRecord.summary.attacks += 1;
+  }
+
+  const wasResolved = isFiniteValue(entry.resolvedAt);
+  Object.assign(entry, {
+    resolvedAt: Date.now(),
+    saveTotal: Number(data.saveTotal) || 0,
+    naturalRoll: isFiniteValue(data.naturalRoll)
+      ? Number(data.naturalRoll)
+      : null,
+    success: Boolean(data.success),
+    usedCriticalAdvantage: Boolean(data.usedCriticalAdvantage),
+    criticalLossBonus: Boolean(data.criticalLossBonus),
+    nextSaveAdvantageGranted: Boolean(data.nextSaveAdvantageGranted),
+    lossRolled: Number(data.lossRolled) || 0,
+    lossApplied: Number(data.lossApplied) || 0,
+    remainingScore: isFiniteValue(data.remainingScore)
+      ? Number(data.remainingScore)
+      : null
+  });
+
+  if (!wasResolved) {
+    victimRecord.summary.saves += 1;
+    if (data.success) victimRecord.summary.successes += 1;
+    if (Number(data.naturalRoll) === 1) victimRecord.summary.naturalOnes += 1;
+    if (Number(data.naturalRoll) === 20) victimRecord.summary.naturalTwenties += 1;
+  }
+
+  records[data.actorId] = victimRecord;
+  await game.settings.set(MODULE_ID, "victimRecords", records);
 }
 
 function formatCalendarTimestamp(timestamp) {
@@ -304,10 +500,13 @@ function renderAttackCard(data) {
     const auraText = data.paladinNear
       ? format("Card.AuraNear", { bonus: data.auraBonus, source: data.auraSource })
       : localize("Card.AuraFar");
+    const proximityText = data.proximityAutomatic
+      ? localize("Card.PaladinAutomatic")
+      : `${data.proximityRoll}/10`;
 
     body = `
       <div class="codd-stats">
-        ${cardStat(localize("Card.Paladin"), `${data.proximityRoll}/10`, auraTone)}
+        ${cardStat(localize("Card.Paladin"), proximityText, auraTone)}
         ${cardStat(localize("Card.Aura"), auraText, auraTone)}
         ${cardStat(localize("Card.AttackedAbility"), `${data.abilityRoll}: ${abilityLabel}`)}
         ${cardStat(localize("Card.SaveDC"), data.dc)}
@@ -434,7 +633,7 @@ async function updateAttackMessage(message, data) {
 
 async function createAttackCard(actor, scheduledTimestamp, { manual = false } = {}) {
   const data = {
-    version: 2,
+    version: 3,
     actorId: actor.id,
     actorName: actor.name,
     scheduledTimestamp,
@@ -449,7 +648,7 @@ async function createAttackCard(actor, scheduledTimestamp, { manual = false } = 
     lossFormula: String(game.settings.get(MODULE_ID, "abilityLossFormula") || "1d4")
   };
 
-  return ChatMessage.create({
+  const message = await ChatMessage.create({
     user: game.user.id,
     speaker: getActorSpeaker(actor),
     content: renderAttackCard(data),
@@ -459,6 +658,11 @@ async function createAttackCard(actor, scheduledTimestamp, { manual = false } = 
       }
     }
   });
+  data.messageId = message.id;
+  await message.update({
+    [`flags.${MODULE_ID}.attack`]: data
+  });
+  return message;
 }
 
 async function createAttackCardsForVictims(scheduledTimestamp, options = {}) {
@@ -542,17 +746,30 @@ async function handleStartRequest(message, data) {
   const actor = game.actors.get(data.actorId);
   if (!actor) throw new Error(`Actor ${data.actorId} no longer exists.`);
 
+  data.messageId = message.id;
   data.state = "determining";
   await updateAttackMessage(message, data);
 
   try {
-    const proximityRoll = await rollToChat(
-      "1d10",
-      format("Rolls.PaladinProximity", { actor: actor.name, target: data.paladinChance }),
-      actor
-    );
-    const paladinNear = proximityRoll.total <= data.paladinChance;
-    const aura = paladinNear ? getAuraDetails() : { bonus: 0, source: "", actorId: null };
+    const selfAura = getActorAuraDetails(actor);
+    let proximityRoll = null;
+    let proximityAutomatic = false;
+    let paladinNear = false;
+    let aura = { bonus: 0, source: "", actorId: null };
+
+    if (selfAura) {
+      proximityAutomatic = true;
+      paladinNear = true;
+      aura = selfAura;
+    } else {
+      proximityRoll = await rollToChat(
+        "1d10",
+        format("Rolls.PaladinProximity", { actor: actor.name, target: data.paladinChance }),
+        actor
+      );
+      paladinNear = proximityRoll.total <= data.paladinChance;
+      aura = paladinNear ? getAuraDetails() : aura;
+    }
 
     const abilityRoll = await rollToChat(
       "1d6",
@@ -563,7 +780,8 @@ async function handleStartRequest(message, data) {
 
     Object.assign(data, {
       state: "ready",
-      proximityRoll: proximityRoll.total,
+      proximityRoll: proximityRoll?.total ?? null,
+      proximityAutomatic,
       paladinNear,
       auraBonus: aura.bonus,
       auraSource: aura.source,
@@ -571,6 +789,7 @@ async function handleStartRequest(message, data) {
       abilityRoll: abilityRoll.total,
       ability
     });
+    await recordAttackDetermination(data);
     await updateAttackMessage(message, data);
   } catch (error) {
     data.state = "pending";
@@ -826,6 +1045,7 @@ async function handleSaveRequest(message, data) {
       });
     }
 
+    await recordSaveResolution(data);
     await updateAttackMessage(message, data);
   } catch (error) {
     data.state = "ready";
@@ -944,7 +1164,7 @@ class CurseConfiguration extends FormApplication {
       id: `${MODULE_ID}-configuration`,
       title: localize("Config.Title"),
       template: `modules/${MODULE_ID}/templates/configuration.hbs`,
-      width: 580,
+      width: 680,
       height: "auto",
       closeOnSubmit: true
     });
@@ -954,6 +1174,10 @@ class CurseConfiguration extends FormApplication {
     const selectedIds = new Set(getSelectedVictimIds());
     const selectedPaladinId = game.settings.get(MODULE_ID, "paladinActorId");
     const schedules = getVictimSchedules();
+    const victimRollModes = getVictimRollModes();
+    const defaultRollMode = String(
+      game.settings.get(MODULE_ID, "rollMode") || "publicroll"
+    );
     const defaultTimestamp = getDefaultNextTimestamp();
     const calendarMonths = getCalendarMonths();
     const availableActors = getConfigurableActors()
@@ -969,13 +1193,25 @@ class CurseConfiguration extends FormApplication {
           selected: month.value === Number(date.month)
         }));
         const selectedMonthDays = months.find((month) => month.selected)?.days ?? 31;
+        const actorRollMode = actor.type === "npc"
+          ? "blindroll"
+          : String(victimRollModes[actor.id] ?? defaultRollMode);
+        const rollModeOptions = Object.keys(ROLL_MODE_LABELS).map((value) => ({
+          value,
+          label: getRollModeLabel(value),
+          selected: value === actorRollMode
+        }));
         return {
           id: actor.id,
           name: actor.name ?? localize("Card.UnknownActor"),
           img: actor.img ?? "icons/svg/mystery-man.svg",
           selected: selectedIds.has(actor.id),
           paladin: isPaladinActor(actor),
+          paladinLevel: getPaladinLevel(actor),
           effect: getManagedDrainEffect(actor)?.name ?? "",
+          npc: actor.type === "npc",
+          rollMode: actorRollMode,
+          rollModeOptions,
           schedule: formatCalendarTimestamp(timestamp),
           year: Number(date.year),
           day: Number(date.day) + 1,
@@ -992,7 +1228,21 @@ class CurseConfiguration extends FormApplication {
     return {
       availableActors,
       hasAvailableActors: availableActors.length > 0,
-      paladins
+      paladins,
+      settings: {
+        saveDC: Number(game.settings.get(MODULE_ID, "saveDC")) || 18,
+        paladinChance: Number(game.settings.get(MODULE_ID, "paladinChance")) || 0,
+        fallbackAuraBonus: Number(
+          game.settings.get(MODULE_ID, "fallbackAuraBonus")
+        ) || 0,
+        intervalDays: Number(game.settings.get(MODULE_ID, "intervalDays")) || 1,
+        abilityLossFormula: String(
+          game.settings.get(MODULE_ID, "abilityLossFormula") || "1d4"
+        ),
+        spellHealingPenalty: Number(
+          game.settings.get(MODULE_ID, "spellHealingPenalty")
+        ) || 0
+      }
     };
   }
 
@@ -1004,10 +1254,22 @@ class CurseConfiguration extends FormApplication {
       for (const input of row?.querySelectorAll("[data-codd-schedule-input]") ?? []) {
         input.disabled = !checkbox.checked;
       }
+      const rollMode = row?.querySelector("[data-codd-roll-mode]");
+      if (rollMode) {
+        rollMode.disabled = !checkbox.checked || rollMode.dataset.coddNpc === "true";
+      }
     };
     html.find('input[name="victims"]').each((_, checkbox) => {
       syncScheduleControls(checkbox);
       checkbox.addEventListener("change", () => syncScheduleControls(checkbox));
+    });
+
+    html.find("[data-codd-search]").on("input", (event) => {
+      const query = String(event.currentTarget.value ?? "").trim().toLocaleLowerCase();
+      html.find("[data-codd-actor]").each((_, row) => {
+        const actorName = String(row.dataset.coddActorName ?? "").toLocaleLowerCase();
+        row.hidden = Boolean(query) && !actorName.includes(query);
+      });
     });
 
     html.find("[data-codd-month]").on("change", (event) => {
@@ -1040,6 +1302,9 @@ class CurseConfiguration extends FormApplication {
       await removeManagedCurseEffects(actorIds);
       this.render();
     });
+    html.find('[data-action="open-records"]').on("click", () => {
+      openRecordsApplication();
+    });
   }
 
   async _updateObject(event, formData) {
@@ -1050,11 +1315,34 @@ class CurseConfiguration extends FormApplication {
     const paladinActorId = String(formData.paladinActorId ?? "");
     const currentSchedules = getVictimSchedules();
     const victimSchedules = {};
+    const victimRollModes = getVictimRollModes();
     const simpleCalendar = getSimpleCalendar();
+
+    const settingInputs = {
+      saveDC: "number",
+      paladinChance: "number",
+      fallbackAuraBonus: "number",
+      intervalDays: "number",
+      abilityLossFormula: "string",
+      spellHealingPenalty: "number"
+    };
+    for (const [setting, type] of Object.entries(settingInputs)) {
+      const input = form.querySelector(`[data-codd-setting="${setting}"]`);
+      if (!input) continue;
+      const value = type === "number" ? Number(input.value) : String(input.value);
+      await game.settings.set(MODULE_ID, setting, value);
+    }
 
     for (const actorId of victimIds) {
       const row = Array.from(form.querySelectorAll("[data-codd-actor]"))
         .find((element) => element.dataset.coddActor === actorId);
+      const actor = game.actors.get(actorId);
+      const selectedRollMode = actor?.type === "npc"
+        ? "blindroll"
+        : String(row?.querySelector("[data-codd-roll-mode]")?.value ?? "publicroll");
+      victimRollModes[actorId] = Object.hasOwn(ROLL_MODE_LABELS, selectedRollMode)
+        ? selectedRollMode
+        : "publicroll";
       const year = Number(row?.querySelector("[data-codd-year]")?.value);
       const month = Number(row?.querySelector("[data-codd-month]")?.value);
       const day = Number(row?.querySelector("[data-codd-day]")?.value) - 1;
@@ -1084,10 +1372,325 @@ class CurseConfiguration extends FormApplication {
     await game.settings.set(MODULE_ID, "victimActorIds", victimIds);
     await game.settings.set(MODULE_ID, "paladinActorId", paladinActorId);
     await game.settings.set(MODULE_ID, "victimSchedules", victimSchedules);
+    await game.settings.set(MODULE_ID, "victimRollModes", victimRollModes);
     await ensureVictimSchedules();
     await ensureRulesJournal();
     ui.notifications.info(localize("Notifications.ConfigurationSaved"));
   }
+}
+
+function getShareFieldsForUser(actorId, userId) {
+  const shares = getRecordShares();
+  const fields = shares?.[actorId]?.[userId];
+  return Array.isArray(fields)
+    ? fields.filter((field) => RECORD_SHARE_FIELDS.includes(field))
+    : [];
+}
+
+function parseNullableNumber(value) {
+  if (value === "" || value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function getRecordsActorIds() {
+  return [...new Set([
+    ...getSelectedVictimIds(),
+    ...Object.keys(getCurseRecords())
+  ])].filter((actorId) => game.actors.get(actorId));
+}
+
+class CurseRecords extends FormApplication {
+  constructor(object = {}, options = {}) {
+    super(object, options);
+    this.selectedActorId = options.actorId ?? "";
+  }
+
+  static get defaultOptions() {
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      id: `${MODULE_ID}-records`,
+      title: localize("Records.Title"),
+      template: `modules/${MODULE_ID}/templates/records.hbs`,
+      width: 900,
+      height: 650,
+      resizable: true,
+      closeOnSubmit: false
+    });
+  }
+
+  getData() {
+    const records = getCurseRecords();
+    const recordShares = getRecordShares();
+    const isGM = Boolean(game.user?.isGM);
+    const actorIds = getRecordsActorIds().filter((actorId) => {
+      if (isGM) return true;
+      return getShareFieldsForUser(actorId, game.user.id).length > 0;
+    });
+    const actors = actorIds
+      .map((actorId) => game.actors.get(actorId))
+      .filter(Boolean)
+      .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")));
+
+    if (!actors.some((actor) => actor.id === this.selectedActorId)) {
+      this.selectedActorId = actors[0]?.id ?? "";
+    }
+
+    const selectedActor = game.actors.get(this.selectedActorId) ?? null;
+    const victimRecord = selectedActor
+      ? normalizeVictimRecord(selectedActor.id, records[selectedActor.id])
+      : null;
+    const sharedFields = new Set(
+      isGM
+        ? RECORD_SHARE_FIELDS
+        : getShareFieldsForUser(this.selectedActorId, game.user.id)
+    );
+
+    const summary = victimRecord?.summary ?? emptyRecordSummary();
+    const summaryFields = [
+      { key: "attacks", label: localize("Records.Attacks"), value: summary.attacks, visible: sharedFields.has("totals") },
+      { key: "saves", label: localize("Records.Saves"), value: summary.saves, visible: sharedFields.has("totals") },
+      { key: "successes", label: localize("Records.Successes"), value: summary.successes, visible: sharedFields.has("totals") },
+      { key: "naturalOnes", label: localize("Records.NaturalOnes"), value: summary.naturalOnes, visible: sharedFields.has("criticals") },
+      { key: "naturalTwenties", label: localize("Records.NaturalTwenties"), value: summary.naturalTwenties, visible: sharedFields.has("criticals") },
+      { key: "paladinNearby", label: localize("Records.PaladinNearby"), value: summary.paladinNearby, visible: sharedFields.has("paladin") }
+    ].filter((field) => isGM || field.visible);
+
+    const entries = (victimRecord?.entries ?? [])
+      .slice()
+      .sort((a, b) => Number(b.startedAt ?? 0) - Number(a.startedAt ?? 0))
+      .map((entry) => ({
+        ...entry,
+        dateLabel: formatCalendarTimestamp(Number(entry.scheduledTimestamp)),
+        proximityDisplay: entry.proximityAutomatic
+          ? localize("Records.AutomaticAura")
+          : (isFiniteValue(entry.proximityRoll) ? Number(entry.proximityRoll) : "—"),
+        abilityLabel: entry.ability ? getAbilityLabel(entry.ability) : "—",
+        outcomeLabel: isFiniteValue(entry.resolvedAt)
+          ? (entry.success ? localize("Card.Success") : localize("Card.Failure"))
+          : localize("Records.NotResolved"),
+        saveDisplay: isFiniteValue(entry.saveTotal) ? Number(entry.saveTotal) : "—",
+        naturalDisplay: isFiniteValue(entry.naturalRoll) ? Number(entry.naturalRoll) : "—",
+        lossDisplay: isFiniteValue(entry.lossApplied) ? Number(entry.lossApplied) : "—",
+        abilityOptions: Object.keys(ABILITY_BY_D6).map(
+          (roll) => ABILITY_BY_D6[roll]
+        ).map((abilityId) => ({
+          value: abilityId,
+          label: getAbilityLabel(abilityId),
+          selected: abilityId === entry.ability
+        }))
+      }));
+
+    const users = isGM
+      ? game.users
+        .filter((user) => !user.isGM)
+        .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")))
+        .map((user) => {
+          const granted = new Set(recordShares?.[this.selectedActorId]?.[user.id] ?? []);
+          return {
+            id: user.id,
+            name: user.name,
+            active: user.active,
+            fields: RECORD_SHARE_FIELDS.map((field) => ({
+              key: field,
+              label: localize(`Records.Share.${field}`),
+              checked: granted.has(field)
+            }))
+          };
+        })
+      : [];
+
+    return {
+      isGM,
+      actors: actors.map((actor) => ({
+        id: actor.id,
+        name: actor.name,
+        selected: actor.id === this.selectedActorId
+      })),
+      hasActors: actors.length > 0,
+      selectedActor: selectedActor
+        ? {
+          id: selectedActor.id,
+          name: selectedActor.name,
+          img: selectedActor.img ?? "icons/svg/mystery-man.svg"
+        }
+        : null,
+      summaryFields,
+      entries,
+      hasEntries: entries.length > 0,
+      users,
+      showTotals: sharedFields.has("totals"),
+      showCriticals: sharedFields.has("criticals"),
+      showPaladin: sharedFields.has("paladin"),
+      showRolls: sharedFields.has("rolls"),
+      showAbilities: sharedFields.has("abilities"),
+      showLosses: sharedFields.has("losses"),
+      showHistory: isGM || ["paladin", "rolls", "abilities", "losses"]
+        .some((field) => sharedFields.has(field))
+    };
+  }
+
+  activateListeners(html) {
+    super.activateListeners(html);
+
+    html.find("[data-codd-record-actor]").on("change", (event) => {
+      this.selectedActorId = String(event.currentTarget.value ?? "");
+      this.render();
+    });
+
+    html.find('[data-action="delete-record"]').on("click", async (event) => {
+      if (!game.user.isGM) return;
+      const confirmed = await Dialog.confirm({
+        title: localize("Records.DeleteTitle"),
+        content: `<p>${escapeHtml(localize("Records.DeleteConfirm"))}</p>`
+      });
+      if (!confirmed) return;
+      event.currentTarget.closest("[data-codd-record-row]")?.remove();
+    });
+
+    html.find('[data-action="recalculate-summary"]').on("click", () => {
+      if (!game.user.isGM) return;
+      const rows = Array.from(
+        html[0]?.querySelectorAll("[data-codd-record-row]") ?? []
+      );
+      const values = {
+        attacks: rows.length,
+        saves: rows.filter((row) =>
+          row.querySelector('[data-field="saveTotal"]')?.value !== ""
+        ).length,
+        successes: rows.filter((row) =>
+          row.querySelector('[data-field="success"]')?.checked
+        ).length,
+        naturalOnes: rows.filter((row) =>
+          Number(row.querySelector('[data-field="naturalRoll"]')?.value) === 1
+        ).length,
+        naturalTwenties: rows.filter((row) =>
+          Number(row.querySelector('[data-field="naturalRoll"]')?.value) === 20
+        ).length,
+        paladinNearby: rows.filter((row) =>
+          row.querySelector('[data-field="paladinNear"]')?.checked
+        ).length
+      };
+      for (const [key, value] of Object.entries(values)) {
+        const input = html[0]?.querySelector(`[data-codd-summary="${key}"]`);
+        if (input) input.value = String(value);
+      }
+    });
+  }
+
+  async _updateObject(event) {
+    if (!game.user.isGM || !this.selectedActorId) return;
+
+    const form = event.currentTarget;
+    const records = getCurseRecords();
+    const existing = normalizeVictimRecord(
+      this.selectedActorId,
+      records[this.selectedActorId]
+    );
+    const summary = {};
+    for (const key of Object.keys(emptyRecordSummary())) {
+      const input = form.querySelector(`[data-codd-summary="${key}"]`);
+      summary[key] = Math.max(0, Math.floor(Number(input?.value) || 0));
+    }
+
+    const oldEntries = new Map(
+      existing.entries.map((entry) => [entry.id, entry])
+    );
+    const entries = Array.from(
+      form.querySelectorAll("[data-codd-record-row]")
+    ).map((row) => {
+      const id = String(row.dataset.coddRecordRow);
+      const previous = oldEntries.get(id) ?? { id };
+      const field = (name) => row.querySelector(`[data-field="${name}"]`);
+      return {
+        ...previous,
+        id,
+        scheduledTimestamp: Number(field("scheduledTimestamp")?.value) || 0,
+        startedAt: Number(field("startedAt")?.value) || Date.now(),
+        resolvedAt: parseNullableNumber(field("resolvedAt")?.value),
+        proximityRoll: parseNullableNumber(field("proximityRoll")?.value),
+        proximityAutomatic: Boolean(field("proximityAutomatic")?.checked),
+        paladinNear: Boolean(field("paladinNear")?.checked),
+        auraBonus: Number(field("auraBonus")?.value) || 0,
+        auraSource: String(field("auraSource")?.value ?? ""),
+        abilityRoll: Number(field("abilityRoll")?.value) || 0,
+        ability: String(field("ability")?.value ?? ""),
+        saveTotal: parseNullableNumber(field("saveTotal")?.value),
+        naturalRoll: parseNullableNumber(field("naturalRoll")?.value),
+        success: Boolean(field("success")?.checked),
+        lossRolled: Number(field("lossRolled")?.value) || 0,
+        lossApplied: Number(field("lossApplied")?.value) || 0,
+        remainingScore: parseNullableNumber(field("remainingScore")?.value)
+      };
+    });
+
+    records[this.selectedActorId] = {
+      version: 1,
+      actorId: this.selectedActorId,
+      summary: normalizeRecordSummary(summary),
+      entries
+    };
+    await game.settings.set(MODULE_ID, "victimRecords", records);
+
+    const shares = getRecordShares();
+    shares[this.selectedActorId] = {};
+    for (const user of game.users.filter((candidate) => !candidate.isGM)) {
+      const granted = RECORD_SHARE_FIELDS.filter((field) =>
+        form.querySelector(
+          `[data-codd-share-user="${user.id}"][data-codd-share-field="${field}"]`
+        )?.checked
+      );
+      if (granted.length) shares[this.selectedActorId][user.id] = granted;
+    }
+    await game.settings.set(MODULE_ID, "victimRecordShares", shares);
+
+    ui.notifications.info(localize("Notifications.RecordsSaved"));
+    this.render();
+  }
+}
+
+function openConfigurationApplication() {
+  if (!game.user?.isGM) return;
+  if (!configurationApplication) configurationApplication = new CurseConfiguration();
+  configurationApplication.render(true);
+}
+
+function openRecordsApplication(actorId = "") {
+  if (!recordsApplication) {
+    recordsApplication = new CurseRecords({}, { actorId });
+  } else if (actorId) {
+    recordsApplication.selectedActorId = actorId;
+  }
+  recordsApplication.render(true);
+}
+
+function renderQuickAccess() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(`${MODULE_ID}-quick-access`)) return;
+
+  const element = document.createElement("nav");
+  element.id = `${MODULE_ID}-quick-access`;
+  element.className = "codd-quick-access";
+  element.setAttribute("aria-label", localize("QuickAccess.Label"));
+  element.innerHTML = `
+    <button type="button" data-codd-open="records" title="${escapeHtml(localize("QuickAccess.Records"))}">
+      <i class="fa-solid fa-book-skull"></i>
+    </button>
+    ${game.user?.isGM ? `
+      <button type="button" data-codd-open="configuration" title="${escapeHtml(localize("QuickAccess.Configuration"))}">
+        <i class="fa-solid fa-gears"></i>
+      </button>
+    ` : ""}
+  `;
+  document.body.append(element);
+
+  element.querySelector('[data-codd-open="records"]')?.addEventListener(
+    "click",
+    () => openRecordsApplication()
+  );
+  element.querySelector('[data-codd-open="configuration"]')?.addEventListener(
+    "click",
+    () => openConfigurationApplication()
+  );
 }
 
 function getAssociatedSpellFromDamageOptions(options) {
@@ -1137,9 +1740,12 @@ function buildRulesJournalContent() {
     0,
     Number(game.settings.get(MODULE_ID, "spellHealingPenalty")) || 0
   );
-  const rollMode = getRollModeLabel(
-    String(game.settings.get(MODULE_ID, "rollMode") || "publicroll")
-  );
+  const rollModeDescriptions = getSelectedVictims()
+    .map((actor) => format("Rules.VictimRollMode", {
+      actor: escapeHtml(actor.name),
+      mode: escapeHtml(getRollModeLabel(getRollModeForActor(actor)))
+    }))
+    .join(" ");
 
   return `
     <section class="codd-rules">
@@ -1148,6 +1754,7 @@ function buildRulesJournalContent() {
       <h2>${escapeHtml(localize("Rules.AttackHeading"))}</h2>
       <ol>
         <li>${format("Rules.PaladinCheck", { chance: paladinChance })}</li>
+        <li>${format("Rules.PaladinSelfAura", { level: PALADIN_SELF_AURA_LEVEL })}</li>
         <li>${escapeHtml(localize("Rules.AbilityCheck"))}</li>
         <li>${format("Rules.Save", { dc })}</li>
         <li>${format("Rules.Failure", { formula: loss })}</li>
@@ -1166,9 +1773,12 @@ function buildRulesJournalContent() {
           victims: victimNames || escapeHtml(localize("Rules.NoVictims"))
         })}</li>
         <li>${format("Rules.Interval", { interval })}</li>
-        <li>${format("Rules.RollMode", { mode: escapeHtml(rollMode) })}</li>
+        <li>${format("Rules.RollModes", {
+          modes: rollModeDescriptions || escapeHtml(localize("Rules.NoVictims"))
+        })}</li>
         <li>${escapeHtml(localize("Rules.NpcRolls"))}</li>
         <li>${escapeHtml(localize("Rules.ChatPermissions"))}</li>
+        <li>${escapeHtml(localize("Rules.Records"))}</li>
       </ul>
       <p><em>${escapeHtml(localize("Rules.NoExactDate"))}</em></p>
       <h2>${escapeHtml(localize("Rules.RemovalHeading"))}</h2>
@@ -1404,6 +2014,27 @@ function registerSettings() {
     default: {}
   });
 
+  game.settings.register(MODULE_ID, "victimRollModes", {
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
+  game.settings.register(MODULE_ID, "victimRecords", {
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
+  game.settings.register(MODULE_ID, "victimRecordShares", {
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
   // Retained only to migrate schedules created by versions before 0.2.0.
   game.settings.register(MODULE_ID, "nextAttackTimestamp", {
     scope: "world",
@@ -1462,6 +2093,7 @@ function registerCalendarHooks() {
 Hooks.once("init", () => {
   registerSettings();
   Hooks.on("dnd5e.preApplyDamage", reduceSpellHealing);
+  Hooks.on("renderSceneControls", renderQuickAccess);
 });
 
 Hooks.once("ready", async () => {
@@ -1474,6 +2106,7 @@ Hooks.once("ready", async () => {
 
   Hooks.on("renderChatMessage", activateChatCardListeners);
   registerCalendarHooks();
+  renderQuickAccess();
 
   if (game.system.id !== "dnd5e") {
     ui.notifications.error(localize("Notifications.WrongSystem"));
@@ -1495,6 +2128,9 @@ Hooks.once("ready", async () => {
     removeManagedCurseEffects,
     removeManagedDrainEffects: removeManagedCurseEffects,
     getSelectedVictims,
-    ensureRulesJournal
+    ensureRulesJournal,
+    openConfiguration: openConfigurationApplication,
+    openRecords: openRecordsApplication,
+    getCurseRecords
   };
 });

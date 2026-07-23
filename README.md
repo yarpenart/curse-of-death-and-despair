@@ -13,7 +13,7 @@ W wyznaczonym dniu aktywnego kalendarza główny MG publikuje na czacie osobną 
 
 Po rozpoczęciu ataku moduł:
 
-1. Rzuca `1d10`, aby ustalić, czy ofiara znajduje się w pobliżu paladyna. Domyślnie wynik `5` lub niższy oznacza sukces (5/10).
+1. Rzuca `1d10`, aby ustalić, czy ofiara znajduje się w pobliżu paladyna. Domyślnie wynik `5` lub niższy oznacza sukces (5/10). Ofiara mająca co najmniej 6 poziomów paladyna pomija ten test i automatycznie korzysta z własnej Aury Ochrony.
 2. Rzuca `1d6`, aby wybrać atakowaną cechę: Strength, Dexterity, Constitution, Intelligence, Wisdom albo Charisma.
 3. Udostępnia właścicielowi postaci oraz MG przycisk rzutu obronnego na wybraną cechę.
 4. Przy obecności paladyna tymczasowo dodaje do rzutu jego aktualny modyfikator z Charyzmy.
@@ -21,7 +21,7 @@ Po rozpoczęciu ataku moduł:
 
 Naturalne `1` na nieudanym rzucie dodaje `+1` do formuły utraty cechy. Naturalne `20` przyznaje ofierze przewagę w kolejnym rzucie obronnym przeciw klątwie.
 
-Każda ofiara ma osobną datę pierwszego lub następnego ataku. Przyciski na jej karcie czatu widzą i mogą uruchamiać wyłącznie właściciele tej postaci oraz MG.
+Każda ofiara ma osobną datę pierwszego lub następnego ataku oraz własny Roll Mode. Przyciski na jej karcie czatu widzą i mogą uruchamiać wyłącznie właściciele tej postaci oraz MG.
 
 Efekt zmniejsza wynikową wartość cechy, lecz nie nadpisuje jej wartości bazowej. Usunięcie efektu natychmiast przywraca bazowe wartości.
 
@@ -47,12 +47,15 @@ Dostępne ustawienia:
 - Awaryjna premia aury — domyślnie +3.
 - Liczba dni między atakami — domyślnie 3.
 - Formuła utraty cechy — domyślnie `1d4`.
-- Tryb rzutów postaci graczy — publiczny, prywatny MG, ślepy MG albo prywatny.
+- Domyślny tryb rzutów postaci graczy — publiczny, prywatny MG, ślepy MG albo prywatny. Każda ofiara może otrzymać własny Roll Mode bezpośrednio na liście.
 - Kara do leczenia z zaklęć — domyślnie 3 PW.
 - `Skonfiguruj ofiary` — wybór przeklętych postaci, osobnych dat aktywacji i źródła Aury Ochrony.
 
+Lista ofiar zawiera wyszukiwarkę podpowiadającą postacie, osobny Roll Mode każdej postaci oraz jej indywidualny termin. Ustawienia ST, szansy na paladyna, odstępu dni, utraty cechy, awaryjnej aury i kary leczenia są też dostępne w zwijanej sekcji tego samego panelu.
+
 W panelu ofiar można także:
 
+- otworzyć dane klątwy,
 - utworzyć testowy atak bez zmiany harmonogramu,
 - wyznaczyć następny termin od bieżącego dnia,
 - usunąć wszystkie zarządzane efekty utraty cech z wybranych ofiar.
@@ -60,6 +63,23 @@ W panelu ofiar można także:
 Zmiana odstępu dni automatycznie wyznacza wszystkim ofiarom następny atak od początku bieżącego dnia kalendarza.
 
 Moduł tworzy dostępny graczom Journal z pełnymi zasadami i aktualizuje go po zmianie konfiguracji. Dokładne daty kolejnych ataków pozostają widoczne tylko dla MG.
+
+## Dane klątwy
+
+Przy interfejsie Foundry znajduje się przypięty przycisk szybkiego dostępu, działający podobnie do widżetu Simple Calendar Reborn:
+
+- przycisk danych otwiera historię i statystyki,
+- dodatkowy przycisk MG otwiera konfigurację ofiar i zasad.
+
+Dla każdej ofiary moduł zapisuje:
+
+- liczbę ataków klątwy i wykonanych rzutów obronnych,
+- liczbę sukcesów, naturalnych 1 i naturalnych 20,
+- liczbę ataków, podczas których ofiara była przy paladynie,
+- wyniki każdego `1d10`, `1d6`, d20 save’a i rzutu utraty cechy,
+- atakowaną cechę, źródło oraz premię aury, wynik save’a i zastosowaną utratę.
+
+MG może edytować lub usuwać poszczególne wpisy, ręcznie poprawiać podsumowanie albo przeliczyć je z historii. Udostępnianie jest ustawiane osobno dla każdej ofiary i każdego gracza w kategoriach: podsumowanie, wyniki naturalne, paladyn i aura, poszczególne rzuty, atakowane cechy oraz utrata cech.
 
 Ofiary klątwy otrzymują o skonfigurowaną wartość mniej PW z każdego zastosowanego leczenia pochodzącego z zaklęcia. Krótki i długi odpoczynek oraz eliksiry i mikstury nie są objęte tym efektem.
 
