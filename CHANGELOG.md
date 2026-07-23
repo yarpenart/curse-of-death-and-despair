@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+- Przesunięto wyłącznie wyszukiwarkę ofiar o dodatkowe 16 px w górę.
+- Równoważący dolny margines zachowuje dotychczasowe położenie listy ofiar i wszystkich pozostałych elementów konfiguratora.
+
 ## 0.3.2
 
 - Przesunięto samą wyszukiwarkę ofiar o 4 px w górę bez zmiany położenia pozostałych elementów konfiguratora.
