@@ -97,7 +97,7 @@
   "CODD.Rules.PaladinCheck": "First, roll 1d10. A result of {chance} or lower places the victim within the Aura of Protection.",
   "CODD.Rules.PaladinSelfAura": "A victim with at least {level} Paladin levels does not make the proximity roll: they automatically receive their own Aura of Protection.",
   "CODD.Rules.AbilityCheck": "A 1d6 roll selects the attacked ability: Strength, Dexterity, Constitution, Intelligence, Wisdom, or Charisma.",
-  "CODD.Rules.Save": "The victim makes a saving throw using the selected ability against DC {dc}.",
+  "CODD.Rules.Save": "The victim makes a saving throw using the selected ability.",
   "CODD.Rules.Failure": "On a failure, the curse drains the selected ability using {formula}. The loss is stored as a reversible effect and cannot lower the ability below 0.",
   "CODD.Rules.CriticalHeading": "Natural results",
   "CODD.Rules.NaturalOne": "A natural 1 on a failed save adds +1 to the ability-loss formula.",

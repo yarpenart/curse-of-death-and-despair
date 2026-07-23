@@ -1908,7 +1908,6 @@ function buildRulesJournalContent() {
     0,
     10
   );
-  const dc = Math.max(1, Number(game.settings.get(MODULE_ID, "saveDC")) || 18);
   const interval = getGlobalIntervalDays();
   const loss = escapeHtml(game.settings.get(MODULE_ID, "abilityLossFormula") || "1d4");
   const healingPenalty = Math.max(
@@ -1937,7 +1936,7 @@ function buildRulesJournalContent() {
         <li>${format("Rules.PaladinCheck", { chance: paladinChance })}</li>
         <li>${format("Rules.PaladinSelfAura", { level: PALADIN_SELF_AURA_LEVEL })}</li>
         <li>${escapeHtml(localize("Rules.AbilityCheck"))}</li>
-        <li>${format("Rules.Save", { dc })}</li>
+        <li>${escapeHtml(localize("Rules.Save"))}</li>
         <li>${format("Rules.Failure", { formula: loss })}</li>
       </ol>
       <h2>${escapeHtml(localize("Rules.CriticalHeading"))}</h2>

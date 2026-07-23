@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.5
+
+- Przesunięto wyłącznie wyszukiwarkę ofiar o kolejne 16 px w górę.
+- Równoważący dolny margines nadal zachowuje położenie listy ofiar i pozostałych elementów konfiguratora.
+- Journal zasad nie ujawnia już ST/DC ataku klątwy.
+
+## 0.3.4
+
+- Przesunięto wyłącznie wyszukiwarkę ofiar o kolejne 16 px w górę.
+- Zwiększony o tę samą wartość dolny margines zachowuje położenie listy ofiar i pozostałych elementów konfiguratora.
+
 ## 0.3.3
 
 - Przesunięto wyłącznie wyszukiwarkę ofiar o dodatkowe 16 px w górę.

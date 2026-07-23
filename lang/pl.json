@@ -97,7 +97,7 @@
   "CODD.Rules.PaladinCheck": "Najpierw wykonywany jest rzut 1k10. Wynik {chance} lub niższy oznacza, że ofiara znajduje się w zasięgu Aury Ochrony.",
   "CODD.Rules.PaladinSelfAura": "Ofiara mająca co najmniej {level} poziomów paladyna nie rzuca na bliskość: automatycznie otrzymuje własną Aurę Ochrony.",
   "CODD.Rules.AbilityCheck": "Rzut 1k6 wybiera atakowaną cechę: Siłę, Zręczność, Kondycję, Inteligencję, Mądrość albo Charyzmę.",
-  "CODD.Rules.Save": "Ofiara wykonuje rzut obronny na wybraną cechę przeciw ST {dc}.",
+  "CODD.Rules.Save": "Ofiara wykonuje rzut obronny na wybraną cechę.",
   "CODD.Rules.Failure": "Po porażce klątwa odbiera punkty wybranej cechy według formuły {formula}. Utrata jest zapisywana jako odwracalny efekt, a cecha nie spada poniżej 0.",
   "CODD.Rules.CriticalHeading": "Naturalne wyniki",
   "CODD.Rules.NaturalOne": "Naturalne 1 przy nieudanym rzucie dodaje +1 do formuły utraty cechy.",
