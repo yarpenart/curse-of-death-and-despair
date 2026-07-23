@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.6
+
+- Każdy atak w Historii rzutów można niezależnie rozwinąć i zwinąć.
+- Zwarte nagłówki pokazują numer ataku, datę, atakowaną cechę i wynik, dzięki czemu łatwiej znaleźć konkretny wpis.
+- Historia otwiera się z wpisami domyślnie zwiniętymi, a stan rozwinięcia pozostaje zachowany podczas pracy w oknie.
+- Zwijanie działa zarówno w edytowalnym widoku MG, jak i w udostępnionym widoku gracza, z zachowaniem ustawień widoczności danych.
+
 ## 0.3.5
 
 - Przesunięto wyłącznie wyszukiwarkę ofiar o kolejne 16 px w górę.

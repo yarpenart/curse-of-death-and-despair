@@ -660,17 +660,89 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 8px;
-  border-bottom: 1px solid var(--color-border-light-2);
   background: rgb(127 16 24 / 8%);
 }
 
-.codd-history-editor > header button {
+.codd-history--expanded > header {
+  border-bottom: 1px solid var(--color-border-light-2);
+}
+
+.codd-history__toggle {
+  display: grid;
+  grid-template-columns: 16px minmax(145px, 1.35fr) minmax(100px, 1fr) minmax(95px, 0.7fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  min-height: 36px;
+  margin: 0;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+.codd-history-editor .codd-history__toggle {
+  flex: 1;
+}
+
+.codd-history-view .codd-history__toggle {
+  width: 100%;
+}
+
+.codd-history__toggle:hover,
+.codd-history__toggle:focus-visible {
+  background: rgb(127 16 24 / 8%);
+  box-shadow: inset 0 0 0 1px rgb(127 16 24 / 25%);
+}
+
+.codd-history__toggle > i {
+  color: #8e1d27;
+  text-align: center;
+}
+
+.codd-history__title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.codd-history__title > span,
+.codd-history__ability,
+.codd-history__outcome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codd-history__title > span {
+  color: var(--color-text-dark-secondary);
+  font-size: 0.7rem;
+}
+
+.codd-history__ability {
+  grid-column: 3;
+  font-weight: 600;
+}
+
+.codd-history__outcome {
+  grid-column: 4;
+  justify-self: end;
+  color: var(--color-text-dark-secondary);
+  font-size: 0.78rem;
+}
+
+.codd-history-editor > header > [data-action="delete-record"] {
   width: 28px;
   height: 26px;
   min-height: 0;
+  margin-right: 6px;
   padding: 0;
   color: #8e1e27;
+}
+
+.codd-history__body[hidden] {
+  display: none;
 }
 
 .codd-history-editor__grid {
@@ -801,9 +873,22 @@
   .codd-settings-grid,
   .codd-summary,
   .codd-history-editor__grid,
-  .codd-history-view dl,
   .codd-sharing__user,
   .codd-sharing__user > div {
+    grid-template-columns: 1fr;
+  }
+
+  .codd-history__toggle {
+    grid-template-columns: 16px minmax(0, 1fr);
+  }
+
+  .codd-history__ability,
+  .codd-history__outcome {
+    display: none;
+    grid-column: auto;
+  }
+
+  .codd-history-view dl {
     grid-template-columns: 1fr;
   }
 }

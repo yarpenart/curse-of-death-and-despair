@@ -1439,6 +1439,7 @@ class CurseRecords extends FormApplication {
   constructor(object = {}, options = {}) {
     super(object, options);
     this.selectedActorId = options.actorId ?? "";
+    this.expandedRecordIds = new Set();
   }
 
   static get defaultOptions() {
@@ -1490,30 +1491,38 @@ class CurseRecords extends FormApplication {
       { key: "paladinNearby", label: localize("Records.PaladinNearby"), value: summary.paladinNearby, visible: sharedFields.has("paladin") }
     ].filter((field) => isGM || field.visible);
 
-    const entries = (victimRecord?.entries ?? [])
+    const sortedEntries = (victimRecord?.entries ?? [])
       .slice()
-      .sort((a, b) => Number(b.startedAt ?? 0) - Number(a.startedAt ?? 0))
-      .map((entry) => ({
-        ...entry,
-        dateLabel: formatCalendarTimestamp(Number(entry.scheduledTimestamp)),
-        proximityDisplay: entry.proximityAutomatic
-          ? localize("Records.AutomaticAura")
-          : (isFiniteValue(entry.proximityRoll) ? Number(entry.proximityRoll) : "—"),
-        abilityLabel: entry.ability ? getAbilityLabel(entry.ability) : "—",
-        outcomeLabel: isFiniteValue(entry.resolvedAt)
-          ? (entry.success ? localize("Card.Success") : localize("Card.Failure"))
-          : localize("Records.NotResolved"),
-        saveDisplay: isFiniteValue(entry.saveTotal) ? Number(entry.saveTotal) : "—",
-        naturalDisplay: isFiniteValue(entry.naturalRoll) ? Number(entry.naturalRoll) : "—",
-        lossDisplay: isFiniteValue(entry.lossApplied) ? Number(entry.lossApplied) : "—",
-        abilityOptions: Object.keys(ABILITY_BY_D6).map(
-          (roll) => ABILITY_BY_D6[roll]
-        ).map((abilityId) => ({
-          value: abilityId,
-          label: getAbilityLabel(abilityId),
-          selected: abilityId === entry.ability
-        }))
-      }));
+      .sort((a, b) => Number(b.startedAt ?? 0) - Number(a.startedAt ?? 0));
+    const entries = sortedEntries
+      .map((entry, index) => {
+        const expansionKey = `${this.selectedActorId}:${entry.id}`;
+        return {
+          ...entry,
+          attackLabel: format("Records.AttackNumber", {
+            number: sortedEntries.length - index
+          }),
+          expanded: this.expandedRecordIds.has(expansionKey),
+          dateLabel: formatCalendarTimestamp(Number(entry.scheduledTimestamp)),
+          proximityDisplay: entry.proximityAutomatic
+            ? localize("Records.AutomaticAura")
+            : (isFiniteValue(entry.proximityRoll) ? Number(entry.proximityRoll) : "—"),
+          abilityLabel: entry.ability ? getAbilityLabel(entry.ability) : "—",
+          outcomeLabel: isFiniteValue(entry.resolvedAt)
+            ? (entry.success ? localize("Card.Success") : localize("Card.Failure"))
+            : localize("Records.NotResolved"),
+          saveDisplay: isFiniteValue(entry.saveTotal) ? Number(entry.saveTotal) : "—",
+          naturalDisplay: isFiniteValue(entry.naturalRoll) ? Number(entry.naturalRoll) : "—",
+          lossDisplay: isFiniteValue(entry.lossApplied) ? Number(entry.lossApplied) : "—",
+          abilityOptions: Object.keys(ABILITY_BY_D6).map(
+            (roll) => ABILITY_BY_D6[roll]
+          ).map((abilityId) => ({
+            value: abilityId,
+            label: getAbilityLabel(abilityId),
+            selected: abilityId === entry.ability
+          }))
+        };
+      });
 
     const users = isGM
       ? game.users
@@ -1572,6 +1581,31 @@ class CurseRecords extends FormApplication {
       this.render();
     });
 
+    html.find('[data-action="toggle-record"]').on("click", (event) => {
+      const button = event.currentTarget;
+      const row = button.closest("[data-codd-record-row]");
+      const body = row?.querySelector("[data-codd-record-body]");
+      if (!row || !body) return;
+
+      const expansionKey = `${this.selectedActorId}:${row.dataset.coddRecordRow}`;
+      const expanded = button.getAttribute("aria-expanded") === "true";
+      const nextExpanded = !expanded;
+      button.setAttribute("aria-expanded", String(nextExpanded));
+      button.setAttribute(
+        "title",
+        localize(nextExpanded
+          ? "Records.CollapseRecord"
+          : "Records.ExpandRecord")
+      );
+      body.hidden = !nextExpanded;
+      row.classList.toggle("codd-history--expanded", nextExpanded);
+      button.querySelector("i")?.classList.toggle("fa-chevron-right", !nextExpanded);
+      button.querySelector("i")?.classList.toggle("fa-chevron-down", nextExpanded);
+
+      if (nextExpanded) this.expandedRecordIds.add(expansionKey);
+      else this.expandedRecordIds.delete(expansionKey);
+    });
+
     html.find('[data-action="delete-record"]').on("click", async (event) => {
       if (!game.user.isGM) return;
       const confirmed = await Dialog.confirm({
@@ -1579,7 +1613,13 @@ class CurseRecords extends FormApplication {
         content: `<p>${escapeHtml(localize("Records.DeleteConfirm"))}</p>`
       });
       if (!confirmed) return;
-      event.currentTarget.closest("[data-codd-record-row]")?.remove();
+      const row = event.currentTarget.closest("[data-codd-record-row]");
+      if (row) {
+        this.expandedRecordIds.delete(
+          `${this.selectedActorId}:${row.dataset.coddRecordRow}`
+        );
+        row.remove();
+      }
     });
 
     html.find('[data-action="recalculate-summary"]').on("click", () => {
