@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.1
+
+- Powiększono konfigurator do 780 × 800 px i włączono ręczne skalowanie okna.
+- Zmniejszono odstęp między nagłówkiem listy ofiar, opisem i wyszukiwarką.
+- Usunięto z wierszy ofiar pola konkretnej daty: rok, miesiąc i dzień.
+- Dodano osobną liczbę dni między atakami dla każdej ofiary oraz przycisk przywracający wartość ogólną.
+- Ogólna liczba dni pozostaje wartością domyślną dla ofiar bez indywidualnego odstępu.
+- Zmiana odstępu konkretnej ofiary wyznacza jej następny atak od bieżącego dnia, a niezmienione harmonogramy zachowują dotychczasowy termin.
+- Istniejące terminy z wersji 0.3.0 są zachowywane podczas aktualizacji i nadal obsługiwane wewnętrznie przez Simple Calendar Reborn.
+- Journal zasad pokazuje wartość ogólną i efektywne odstępy poszczególnych ofiar bez ujawniania dat następnych ataków.
+
 ## 0.3.0
 
 - Przebudowano listę ofiar zgodnie z makietą: dodano wyszukiwarkę, osobny Roll Mode każdej ofiary oraz zachowano indywidualne pola daty.

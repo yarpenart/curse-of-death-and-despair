@@ -21,7 +21,7 @@ Po rozpoczęciu ataku moduł:
 
 Naturalne `1` na nieudanym rzucie dodaje `+1` do formuły utraty cechy. Naturalne `20` przyznaje ofierze przewagę w kolejnym rzucie obronnym przeciw klątwie.
 
-Każda ofiara ma osobną datę pierwszego lub następnego ataku oraz własny Roll Mode. Przyciski na jej karcie czatu widzą i mogą uruchamiać wyłącznie właściciele tej postaci oraz MG.
+Każda ofiara ma osobną liczbę dni między atakami oraz własny Roll Mode. Moduł przechowuje termin następnego ataku wewnętrznie. Przyciski na karcie czatu widzą i mogą uruchamiać wyłącznie właściciele tej postaci oraz MG.
 
 Efekt zmniejsza wynikową wartość cechy, lecz nie nadpisuje jej wartości bazowej. Usunięcie efektu natychmiast przywraca bazowe wartości.
 
@@ -45,24 +45,24 @@ Dostępne ustawienia:
 - ST rzutu obronnego — domyślnie 18.
 - Szansa na bliskość paladyna — domyślnie 5/10.
 - Awaryjna premia aury — domyślnie +3.
-- Liczba dni między atakami — domyślnie 3.
+- Ogólna liczba dni między atakami — domyślnie 3.
 - Formuła utraty cechy — domyślnie `1d4`.
 - Domyślny tryb rzutów postaci graczy — publiczny, prywatny MG, ślepy MG albo prywatny. Każda ofiara może otrzymać własny Roll Mode bezpośrednio na liście.
 - Kara do leczenia z zaklęć — domyślnie 3 PW.
-- `Skonfiguruj ofiary` — wybór przeklętych postaci, osobnych dat aktywacji i źródła Aury Ochrony.
+- `Skonfiguruj ofiary` — wybór przeklętych postaci, osobnych odstępów między atakami i źródła Aury Ochrony.
 
-Lista ofiar zawiera wyszukiwarkę podpowiadającą postacie, osobny Roll Mode każdej postaci oraz jej indywidualny termin. Ustawienia ST, szansy na paladyna, odstępu dni, utraty cechy, awaryjnej aury i kary leczenia są też dostępne w zwijanej sekcji tego samego panelu.
+Lista ofiar zawiera wyszukiwarkę podpowiadającą postacie, osobny Roll Mode każdej postaci oraz jej indywidualną liczbę dni między atakami. Przycisk z ikoną powrotu przywraca danej ofierze ogólną wartość. Ustawienia ST, szansy na paladyna, ogólnego odstępu dni, utraty cechy, awaryjnej aury i kary leczenia są też dostępne w zwijanej sekcji tego samego panelu.
 
 W panelu ofiar można także:
 
 - otworzyć dane klątwy,
 - utworzyć testowy atak bez zmiany harmonogramu,
-- wyznaczyć następny termin od bieżącego dnia,
+- wyznaczyć następne terminy od bieżącego dnia zgodnie z odstępem każdej ofiary,
 - usunąć wszystkie zarządzane efekty utraty cech z wybranych ofiar.
 
-Zmiana odstępu dni automatycznie wyznacza wszystkim ofiarom następny atak od początku bieżącego dnia kalendarza.
+Zmiana indywidualnego odstępu wyznacza tej ofierze następny atak od początku bieżącego dnia kalendarza. Zmiana wartości ogólnej robi to samo dla ofiar, które nie mają własnego odstępu. Niezmienione ustawienia zachowują już zaplanowany termin.
 
-Moduł tworzy dostępny graczom Journal z pełnymi zasadami i aktualizuje go po zmianie konfiguracji. Dokładne daty kolejnych ataków pozostają widoczne tylko dla MG.
+Moduł tworzy dostępny graczom Journal z pełnymi zasadami i aktualizuje go po zmianie konfiguracji. Journal pokazuje odstępy ataków, ale nie ujawnia dokładnych dat kolejnych ataków.
 
 ## Dane klątwy
 

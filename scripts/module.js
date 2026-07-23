@@ -38,6 +38,7 @@ let calendarHooksRegistered = false;
 let journalUpdateTimer = null;
 let configurationApplication = null;
 let recordsApplication = null;
+let suppressGlobalIntervalReset = false;
 
 function localize(key) {
   return game.i18n.localize(`CODD.${key}`);
@@ -394,13 +395,37 @@ function getStartOfCurrentDay() {
   }));
 }
 
-function getDefaultNextTimestamp() {
+function normalizeIntervalDays(value, fallback = 1) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return clamp(Math.floor(Number(fallback) || 1), 1, 365);
+  return clamp(Math.floor(numeric), 1, 365);
+}
+
+function getGlobalIntervalDays() {
+  return normalizeIntervalDays(game.settings.get(MODULE_ID, "intervalDays"), 3);
+}
+
+function getVictimIntervals() {
+  const value = game.settings.get(MODULE_ID, "victimIntervals");
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? foundry.utils.deepClone(value)
+    : {};
+}
+
+function getIntervalDaysForActor(actorId, intervals = getVictimIntervals()) {
+  const globalInterval = getGlobalIntervalDays();
+  if (!Object.hasOwn(intervals, actorId)) return globalInterval;
+  return normalizeIntervalDays(intervals[actorId], globalInterval);
+}
+
+function getDefaultNextTimestamp(intervalDays = getGlobalIntervalDays()) {
   const simpleCalendar = getSimpleCalendar();
   const start = getStartOfCurrentDay();
   if (!Number.isFinite(start) || !simpleCalendar?.api?.timestampPlusInterval) return 0;
 
-  const intervalDays = Math.max(1, Number(game.settings.get(MODULE_ID, "intervalDays")) || 1);
-  return Number(simpleCalendar.api.timestampPlusInterval(start, { day: intervalDays }));
+  return Number(simpleCalendar.api.timestampPlusInterval(start, {
+    day: normalizeIntervalDays(intervalDays, getGlobalIntervalDays())
+  }));
 }
 
 function getVictimSchedules() {
@@ -415,14 +440,15 @@ async function ensureVictimSchedules() {
 
   const victimIds = getSelectedVictimIds();
   const current = getVictimSchedules();
+  const intervals = getVictimIntervals();
   const legacy = Number(game.settings.get(MODULE_ID, "nextAttackTimestamp"));
-  const fallback = Number.isFinite(legacy) && legacy > 0
-    ? legacy
-    : getDefaultNextTimestamp();
   const next = {};
 
   for (const actorId of victimIds) {
     const existing = Number(current[actorId]);
+    const fallback = Number.isFinite(legacy) && legacy > 0
+      ? legacy
+      : getDefaultNextTimestamp(getIntervalDaysForActor(actorId, intervals));
     next[actorId] = Object.hasOwn(current, actorId) && Number.isFinite(existing)
       ? existing
       : fallback;
@@ -436,11 +462,30 @@ async function ensureVictimSchedules() {
 
 async function resetVictimSchedulesFromNow() {
   if (!isPrimaryGM()) return {};
-  const nextTimestamp = getDefaultNextTimestamp();
+  const intervals = getVictimIntervals();
   const schedules = Object.fromEntries(
-    getSelectedVictimIds().map((actorId) => [actorId, nextTimestamp])
+    getSelectedVictimIds().map((actorId) => [
+      actorId,
+      getDefaultNextTimestamp(getIntervalDaysForActor(actorId, intervals))
+    ])
   );
   await game.settings.set(MODULE_ID, "victimSchedules", schedules);
+  return schedules;
+}
+
+async function resetInheritedVictimSchedulesFromNow() {
+  if (!isPrimaryGM()) return getVictimSchedules();
+
+  const intervals = getVictimIntervals();
+  const schedules = getVictimSchedules();
+  let changed = false;
+  for (const actorId of getSelectedVictimIds()) {
+    if (Object.hasOwn(intervals, actorId)) continue;
+    schedules[actorId] = getDefaultNextTimestamp(getGlobalIntervalDays());
+    changed = true;
+  }
+
+  if (changed) await game.settings.set(MODULE_ID, "victimSchedules", schedules);
   return schedules;
 }
 
@@ -689,7 +734,7 @@ async function processCalendarDateChange() {
   try {
     const schedules = await ensureVictimSchedules();
     const now = Number(simpleCalendar.api.timestamp());
-    const intervalDays = Math.max(1, Number(game.settings.get(MODULE_ID, "intervalDays")) || 1);
+    const intervals = getVictimIntervals();
     if (!Number.isFinite(now)) return;
 
     let changed = false;
@@ -697,6 +742,7 @@ async function processCalendarDateChange() {
     for (const actor of getSelectedVictims()) {
       let next = Number(schedules[actor.id]);
       if (!Number.isFinite(next)) continue;
+      const intervalDays = getIntervalDaysForActor(actor.id, intervals);
 
       let cycles = 0;
       while (now >= next && cycles < MAX_MISSED_CYCLES) {
@@ -1128,44 +1174,15 @@ async function removeManagedCurseEffects(actorIds = getSelectedVictimIds()) {
   ui.notifications.info(format("Notifications.EffectsRemoved", { count: removed }));
 }
 
-function getCalendarMonths() {
-  const simpleCalendar = getSimpleCalendar();
-  try {
-    const months = simpleCalendar?.api?.getAllMonths?.() ?? [];
-    return months.map((month, index) => ({
-      value: index,
-      name: month.name ?? String(index + 1),
-      days: Number(month.numberOfDays) || 31
-    }));
-  } catch (error) {
-    console.warn(`${MODULE_ID} | Could not read calendar months.`, error);
-    return [];
-  }
-}
-
-function getScheduleParts(timestamp) {
-  const simpleCalendar = getSimpleCalendar();
-  const fallback = simpleCalendar?.api?.currentDateTime?.() ?? {
-    year: 0,
-    month: 0,
-    day: 0
-  };
-  try {
-    return simpleCalendar?.api?.timestampToDate?.(timestamp) ?? fallback;
-  } catch (error) {
-    console.warn(`${MODULE_ID} | Could not convert a victim schedule.`, error);
-    return fallback;
-  }
-}
-
 class CurseConfiguration extends FormApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: `${MODULE_ID}-configuration`,
       title: localize("Config.Title"),
       template: `modules/${MODULE_ID}/templates/configuration.hbs`,
-      width: 680,
-      height: "auto",
+      width: 780,
+      height: 800,
+      resizable: true,
       closeOnSubmit: true
     });
   }
@@ -1173,26 +1190,19 @@ class CurseConfiguration extends FormApplication {
   getData() {
     const selectedIds = new Set(getSelectedVictimIds());
     const selectedPaladinId = game.settings.get(MODULE_ID, "paladinActorId");
-    const schedules = getVictimSchedules();
+    const victimIntervals = getVictimIntervals();
     const victimRollModes = getVictimRollModes();
     const defaultRollMode = String(
       game.settings.get(MODULE_ID, "rollMode") || "publicroll"
     );
-    const defaultTimestamp = getDefaultNextTimestamp();
-    const calendarMonths = getCalendarMonths();
+    const globalIntervalDays = getGlobalIntervalDays();
     const availableActors = getConfigurableActors()
       .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")))
       .map((actor) => {
-        const storedTimestamp = Number(schedules[actor.id]);
-        const timestamp = Object.hasOwn(schedules, actor.id) && Number.isFinite(storedTimestamp)
-          ? storedTimestamp
-          : defaultTimestamp;
-        const date = getScheduleParts(timestamp);
-        const months = calendarMonths.map((month) => ({
-          ...month,
-          selected: month.value === Number(date.month)
-        }));
-        const selectedMonthDays = months.find((month) => month.selected)?.days ?? 31;
+        const intervalInherited = !Object.hasOwn(victimIntervals, actor.id);
+        const intervalDays = intervalInherited
+          ? globalIntervalDays
+          : normalizeIntervalDays(victimIntervals[actor.id], globalIntervalDays);
         const actorRollMode = actor.type === "npc"
           ? "blindroll"
           : String(victimRollModes[actor.id] ?? defaultRollMode);
@@ -1212,11 +1222,8 @@ class CurseConfiguration extends FormApplication {
           npc: actor.type === "npc",
           rollMode: actorRollMode,
           rollModeOptions,
-          schedule: formatCalendarTimestamp(timestamp),
-          year: Number(date.year),
-          day: Number(date.day) + 1,
-          selectedMonthDays,
-          months
+          intervalDays,
+          intervalInherited
         };
       });
 
@@ -1235,7 +1242,7 @@ class CurseConfiguration extends FormApplication {
         fallbackAuraBonus: Number(
           game.settings.get(MODULE_ID, "fallbackAuraBonus")
         ) || 0,
-        intervalDays: Number(game.settings.get(MODULE_ID, "intervalDays")) || 1,
+        intervalDays: globalIntervalDays,
         abilityLossFormula: String(
           game.settings.get(MODULE_ID, "abilityLossFormula") || "1d4"
         ),
@@ -1249,9 +1256,9 @@ class CurseConfiguration extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
 
-    const syncScheduleControls = (checkbox) => {
+    const syncVictimControls = (checkbox) => {
       const row = checkbox.closest("[data-codd-actor]");
-      for (const input of row?.querySelectorAll("[data-codd-schedule-input]") ?? []) {
+      for (const input of row?.querySelectorAll("[data-codd-victim-input]") ?? []) {
         input.disabled = !checkbox.checked;
       }
       const rollMode = row?.querySelector("[data-codd-roll-mode]");
@@ -1260,8 +1267,8 @@ class CurseConfiguration extends FormApplication {
       }
     };
     html.find('input[name="victims"]').each((_, checkbox) => {
-      syncScheduleControls(checkbox);
-      checkbox.addEventListener("change", () => syncScheduleControls(checkbox));
+      syncVictimControls(checkbox);
+      checkbox.addEventListener("change", () => syncVictimControls(checkbox));
     });
 
     html.find("[data-codd-search]").on("input", (event) => {
@@ -1272,14 +1279,31 @@ class CurseConfiguration extends FormApplication {
       });
     });
 
-    html.find("[data-codd-month]").on("change", (event) => {
-      const month = event.currentTarget;
-      const option = month.selectedOptions?.[0];
-      const row = month.closest("[data-codd-actor]");
-      const day = row?.querySelector("[data-codd-day]");
-      if (!day || !option) return;
-      day.max = option.dataset.days;
-      day.value = String(Math.min(Number(day.value) || 1, Number(day.max) || 31));
+    html.find("[data-codd-interval]").on("input", (event) => {
+      event.currentTarget.dataset.coddInherited = "false";
+    });
+
+    html.find('[data-codd-setting="intervalDays"]').on("input", (event) => {
+      const globalInterval = normalizeIntervalDays(
+        event.currentTarget.value,
+        getGlobalIntervalDays()
+      );
+      html.find('[data-codd-interval][data-codd-inherited="true"]').each(
+        (_, input) => {
+          input.value = String(globalInterval);
+        }
+      );
+    });
+
+    html.find("[data-codd-use-global]").on("click", (event) => {
+      const row = event.currentTarget.closest("[data-codd-actor]");
+      const input = row?.querySelector("[data-codd-interval]");
+      const globalInput = html[0]?.querySelector('[data-codd-setting="intervalDays"]');
+      if (!input) return;
+      input.value = String(
+        normalizeIntervalDays(globalInput?.value, getGlobalIntervalDays())
+      );
+      input.dataset.coddInherited = "true";
     });
 
     html.find('[data-action="test-now"]').on("click", () => {
@@ -1313,10 +1337,13 @@ class CurseConfiguration extends FormApplication {
       form.querySelectorAll('input[name="victims"]:checked')
     ).map((input) => input.value);
     const paladinActorId = String(formData.paladinActorId ?? "");
+    const previousVictimIds = new Set(getSelectedVictimIds());
+    const previousGlobalInterval = getGlobalIntervalDays();
     const currentSchedules = getVictimSchedules();
+    const currentIntervals = getVictimIntervals();
     const victimSchedules = {};
+    const victimIntervals = foundry.utils.deepClone(currentIntervals);
     const victimRollModes = getVictimRollModes();
-    const simpleCalendar = getSimpleCalendar();
 
     const settingInputs = {
       saveDC: "number",
@@ -1326,12 +1353,20 @@ class CurseConfiguration extends FormApplication {
       abilityLossFormula: "string",
       spellHealingPenalty: "number"
     };
-    for (const [setting, type] of Object.entries(settingInputs)) {
-      const input = form.querySelector(`[data-codd-setting="${setting}"]`);
-      if (!input) continue;
-      const value = type === "number" ? Number(input.value) : String(input.value);
-      await game.settings.set(MODULE_ID, setting, value);
+    suppressGlobalIntervalReset = true;
+    try {
+      for (const [setting, type] of Object.entries(settingInputs)) {
+        const input = form.querySelector(`[data-codd-setting="${setting}"]`);
+        if (!input) continue;
+        const value = setting === "intervalDays"
+          ? normalizeIntervalDays(input.value, previousGlobalInterval)
+          : (type === "number" ? Number(input.value) : String(input.value));
+        await game.settings.set(MODULE_ID, setting, value);
+      }
+    } finally {
+      suppressGlobalIntervalReset = false;
     }
+    const nextGlobalInterval = getGlobalIntervalDays();
 
     for (const actorId of victimIds) {
       const row = Array.from(form.querySelectorAll("[data-codd-actor]"))
@@ -1343,35 +1378,30 @@ class CurseConfiguration extends FormApplication {
       victimRollModes[actorId] = Object.hasOwn(ROLL_MODE_LABELS, selectedRollMode)
         ? selectedRollMode
         : "publicroll";
-      const year = Number(row?.querySelector("[data-codd-year]")?.value);
-      const month = Number(row?.querySelector("[data-codd-month]")?.value);
-      const day = Number(row?.querySelector("[data-codd-day]")?.value) - 1;
+      const intervalInput = row?.querySelector("[data-codd-interval]");
+      const intervalInherited = intervalInput?.dataset.coddInherited === "true";
+      const nextInterval = intervalInherited
+        ? nextGlobalInterval
+        : normalizeIntervalDays(intervalInput?.value, nextGlobalInterval);
+      if (intervalInherited) delete victimIntervals[actorId];
+      else victimIntervals[actorId] = nextInterval;
 
-      try {
-        const timestamp = Number(simpleCalendar?.api?.dateToTimestamp?.({
-          year,
-          month,
-          day,
-          hour: 0,
-          minute: 0,
-          seconds: 0
-        }));
-        const previous = Number(currentSchedules[actorId]);
-        victimSchedules[actorId] = Number.isFinite(timestamp)
-          ? timestamp
-          : (Number.isFinite(previous) ? previous : getDefaultNextTimestamp());
-      } catch (error) {
-        console.warn(`${MODULE_ID} | Could not save schedule for actor ${actorId}.`, error);
-        const previous = Number(currentSchedules[actorId]);
-        victimSchedules[actorId] = Number.isFinite(previous)
-          ? previous
-          : getDefaultNextTimestamp();
-      }
+      const previousInterval = Object.hasOwn(currentIntervals, actorId)
+        ? normalizeIntervalDays(currentIntervals[actorId], previousGlobalInterval)
+        : previousGlobalInterval;
+      const previousTimestamp = Number(currentSchedules[actorId]);
+      const shouldResetSchedule = !previousVictimIds.has(actorId)
+        || !Number.isFinite(previousTimestamp)
+        || previousInterval !== nextInterval;
+      victimSchedules[actorId] = shouldResetSchedule
+        ? getDefaultNextTimestamp(nextInterval)
+        : previousTimestamp;
     }
 
     await game.settings.set(MODULE_ID, "victimActorIds", victimIds);
     await game.settings.set(MODULE_ID, "paladinActorId", paladinActorId);
     await game.settings.set(MODULE_ID, "victimSchedules", victimSchedules);
+    await game.settings.set(MODULE_ID, "victimIntervals", victimIntervals);
     await game.settings.set(MODULE_ID, "victimRollModes", victimRollModes);
     await ensureVictimSchedules();
     await ensureRulesJournal();
@@ -1728,13 +1758,14 @@ function reduceSpellHealing(actor, amount, updates, options) {
 
 function buildRulesJournalContent() {
   const victimNames = getSelectedVictims().map((actor) => escapeHtml(actor.name)).join(", ");
+  const victimIntervals = getVictimIntervals();
   const paladinChance = clamp(
     Number(game.settings.get(MODULE_ID, "paladinChance")) || 0,
     0,
     10
   );
   const dc = Math.max(1, Number(game.settings.get(MODULE_ID, "saveDC")) || 18);
-  const interval = Math.max(1, Number(game.settings.get(MODULE_ID, "intervalDays")) || 1);
+  const interval = getGlobalIntervalDays();
   const loss = escapeHtml(game.settings.get(MODULE_ID, "abilityLossFormula") || "1d4");
   const healingPenalty = Math.max(
     0,
@@ -1744,6 +1775,12 @@ function buildRulesJournalContent() {
     .map((actor) => format("Rules.VictimRollMode", {
       actor: escapeHtml(actor.name),
       mode: escapeHtml(getRollModeLabel(getRollModeForActor(actor)))
+    }))
+    .join(" ");
+  const intervalDescriptions = getSelectedVictims()
+    .map((actor) => format("Rules.VictimInterval", {
+      actor: escapeHtml(actor.name),
+      interval: getIntervalDaysForActor(actor.id, victimIntervals)
     }))
     .join(" ");
 
@@ -1772,7 +1809,10 @@ function buildRulesJournalContent() {
         <li>${format("Rules.Victims", {
           victims: victimNames || escapeHtml(localize("Rules.NoVictims"))
         })}</li>
-        <li>${format("Rules.Interval", { interval })}</li>
+        <li>${format("Rules.GlobalInterval", { interval })}</li>
+        <li>${format("Rules.VictimIntervals", {
+          intervals: intervalDescriptions || escapeHtml(localize("Rules.NoVictims"))
+        })}</li>
         <li>${format("Rules.RollModes", {
           modes: rollModeDescriptions || escapeHtml(localize("Rules.NoVictims"))
         })}</li>
@@ -1945,9 +1985,9 @@ function registerSettings() {
     },
     onChange: () => {
       scheduleRulesJournalUpdate();
-      if (!game.ready || !isPrimaryGM()) return;
-      resetVictimSchedulesFromNow().then(() => {
-        ui.notifications.info(localize("Notifications.ScheduleReset"));
+      if (suppressGlobalIntervalReset || !game.ready || !isPrimaryGM()) return;
+      resetInheritedVictimSchedulesFromNow().then(() => {
+        ui.notifications.info(localize("Notifications.GlobalScheduleReset"));
       });
     }
   });
@@ -2008,6 +2048,13 @@ function registerSettings() {
   });
 
   game.settings.register(MODULE_ID, "victimSchedules", {
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
+  game.settings.register(MODULE_ID, "victimIntervals", {
     scope: "world",
     config: false,
     type: Object,

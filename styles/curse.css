@@ -210,17 +210,25 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: 100%;
   min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
-.codd-config h2 {
-  margin: 4px 0 0;
+.codd-config__victim-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.codd-config .notes,
+.codd-config__victim-header h2 {
+  margin: 0;
+}
+
+.codd-config__victim-header .notes,
 .codd-config .hint {
-  margin-top: 0;
-  margin-bottom: 2px;
+  margin: 0;
 }
 
 .codd-config__schedule {
@@ -249,7 +257,7 @@
   flex-direction: column;
   gap: 6px;
   min-height: 0;
-  max-height: 260px;
+  max-height: 330px;
   flex: 0 0 auto;
   overflow-y: auto;
   padding: 2px;
@@ -284,7 +292,7 @@
 
 .codd-victim-row {
   display: grid;
-  grid-template-columns: minmax(155px, 0.9fr) minmax(120px, 0.7fr) minmax(250px, 1.4fr);
+  grid-template-columns: minmax(220px, 1fr) minmax(155px, 0.72fr) minmax(155px, 0.65fr);
   gap: 8px;
   align-items: end;
   padding: 6px;
@@ -338,13 +346,7 @@
   text-align: center;
 }
 
-.codd-date-fields {
-  display: grid;
-  grid-template-columns: 0.8fr 1.4fr 0.7fr;
-  gap: 5px;
-}
-
-.codd-date-fields label {
+.codd-interval-field {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -352,15 +354,29 @@
   font-size: 0.7rem;
 }
 
-.codd-date-fields input,
-.codd-date-fields select {
+.codd-interval-field > div {
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  gap: 4px;
+}
+
+.codd-interval-field input {
   width: 100%;
   min-width: 0;
   height: 28px;
   font-size: 0.8rem;
 }
 
-.codd-date-fields :disabled {
+.codd-interval-field button {
+  width: 30px;
+  min-width: 30px;
+  min-height: 28px;
+  height: 28px;
+  padding: 0;
+  color: #755423;
+}
+
+.codd-interval-field :disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
