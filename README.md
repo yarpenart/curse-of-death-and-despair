@@ -13,11 +13,15 @@ W wyznaczonym dniu aktywnego kalendarza główny MG publikuje na czacie osobną 
 
 Po rozpoczęciu ataku moduł:
 
-1. Rzuca `1d20`, aby ustalić, czy ofiara znajduje się w pobliżu paladyna. Domyślnie wynik `10` lub niższy oznacza sukces (10/20).
+1. Rzuca `1d10`, aby ustalić, czy ofiara znajduje się w pobliżu paladyna. Domyślnie wynik `5` lub niższy oznacza sukces (5/10).
 2. Rzuca `1d6`, aby wybrać atakowaną cechę: Strength, Dexterity, Constitution, Intelligence, Wisdom albo Charisma.
 3. Udostępnia właścicielowi postaci oraz MG przycisk rzutu obronnego na wybraną cechę.
 4. Przy obecności paladyna tymczasowo dodaje do rzutu jego aktualny modyfikator z Charyzmy.
 5. Przy porażce rzuca skonfigurowaną utratę cechy (domyślnie `1d4`) i aktualizuje efekt na karcie postaci.
+
+Naturalne `1` na nieudanym rzucie dodaje `+1` do formuły utraty cechy. Naturalne `20` przyznaje ofierze przewagę w kolejnym rzucie obronnym przeciw klątwie.
+
+Każda ofiara ma osobną datę pierwszego lub następnego ataku. Przyciski na jej karcie czatu widzą i mogą uruchamiać wyłącznie właściciele tej postaci oraz MG.
 
 Efekt zmniejsza wynikową wartość cechy, lecz nie nadpisuje jej wartości bazowej. Usunięcie efektu natychmiast przywraca bazowe wartości.
 
@@ -39,11 +43,13 @@ Przejdź do:
 Dostępne ustawienia:
 
 - ST rzutu obronnego — domyślnie 18.
-- Szansa na bliskość paladyna — domyślnie 10/20.
+- Szansa na bliskość paladyna — domyślnie 5/10.
 - Awaryjna premia aury — domyślnie +3.
 - Liczba dni między atakami — domyślnie 3.
 - Formuła utraty cechy — domyślnie `1d4`.
-- `Skonfiguruj ofiary` — wybór przeklętych postaci i źródła Aury Ochrony.
+- Tryb rzutów postaci graczy — publiczny, prywatny MG, ślepy MG albo prywatny.
+- Kara do leczenia z zaklęć — domyślnie 3 PW.
+- `Skonfiguruj ofiary` — wybór przeklętych postaci, osobnych dat aktywacji i źródła Aury Ochrony.
 
 W panelu ofiar można także:
 
@@ -51,7 +57,11 @@ W panelu ofiar można także:
 - wyznaczyć następny termin od bieżącego dnia,
 - usunąć wszystkie zarządzane efekty utraty cech z wybranych ofiar.
 
-Zmiana odstępu dni automatycznie wyznacza następny atak od początku bieżącego dnia kalendarza.
+Zmiana odstępu dni automatycznie wyznacza wszystkim ofiarom następny atak od początku bieżącego dnia kalendarza.
+
+Moduł tworzy dostępny graczom Journal z pełnymi zasadami i aktualizuje go po zmianie konfiguracji. Dokładne daty kolejnych ataków pozostają widoczne tylko dla MG.
+
+Ofiary klątwy otrzymują o skonfigurowaną wartość mniej PW z każdego zastosowanego leczenia pochodzącego z zaklęcia. Krótki i długi odpoczynek oraz eliksiry i mikstury nie są objęte tym efektem.
 
 ## Zdjęcie klątwy
 
@@ -62,5 +72,6 @@ Zmiana odstępu dni automatycznie wyznacza następny atak od początku bieżące
 
 - Tylko główny MG wyznaczony przez Simple Calendar obsługuje harmonogram, co zapobiega podwójnym wiadomościom przy kilku zalogowanych MG.
 - Wszystkie rzuty są publikowane przez standardowy mechanizm Foundry, dzięki czemu Dice So Nice wyświetla animacje automatycznie.
+- Rzuty NPC związane z klątwą zawsze używają trybu Blind GM Roll, niezależnie od ustawienia dla postaci graczy.
 - Jeśli kalendarz zostanie przestawiony naprzód o wiele cykli, moduł odtworzy maksymalnie 20 pominiętych ataków i następnie przesunie harmonogram do przyszłości.
 - Interfejs ma tłumaczenia polskie i angielskie zgodnie z językiem Foundry.

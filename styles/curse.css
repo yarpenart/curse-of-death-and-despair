@@ -64,6 +64,20 @@
   font-size: 0.85rem;
 }
 
+.codd-rule--critical {
+  margin-top: 8px;
+  border-left-color: #b72d38;
+  background: rgb(183 45 56 / 12%);
+  color: #efb9bd;
+}
+
+.codd-rule--advantage {
+  margin-top: 8px;
+  border-left-color: #4d9460;
+  background: rgb(77 148 96 / 12%);
+  color: #b7dcbf;
+}
+
 .codd-working {
   justify-content: center;
   border-left-color: #a52c36;
@@ -231,16 +245,24 @@
 }
 
 .codd-actor-list {
-  display: grid;
-  align-content: start;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: minmax(44px, auto);
+  display: flex;
+  flex-direction: column;
   gap: 6px;
   min-height: 0;
-  max-height: 150px;
+  max-height: 260px;
   flex: 0 0 auto;
   overflow-y: auto;
   padding: 2px;
+}
+
+.codd-victim-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.9fr) minmax(270px, 1.4fr);
+  gap: 8px;
+  align-items: end;
+  padding: 6px;
+  border: 1px solid var(--color-border-light-2);
+  border-radius: 4px;
 }
 
 .codd-actor {
@@ -248,13 +270,11 @@
   align-items: center;
   gap: 7px;
   min-width: 0;
-  padding: 6px;
-  border: 1px solid var(--color-border-light-2);
-  border-radius: 4px;
+  padding: 2px;
   cursor: pointer;
 }
 
-.codd-actor:hover {
+.codd-victim-row:hover {
   background: rgb(127 16 24 / 8%);
 }
 
@@ -286,10 +306,36 @@
 }
 
 .codd-empty {
-  grid-column: 1 / -1;
   margin: 0;
   padding: 8px;
   text-align: center;
+}
+
+.codd-date-fields {
+  display: grid;
+  grid-template-columns: 0.8fr 1.4fr 0.7fr;
+  gap: 5px;
+}
+
+.codd-date-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--color-text-dark-secondary);
+  font-size: 0.7rem;
+}
+
+.codd-date-fields input,
+.codd-date-fields select {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  font-size: 0.8rem;
+}
+
+.codd-date-fields :disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .codd-config__tools {
@@ -311,8 +357,11 @@
 
 @media (max-width: 560px) {
   .codd-stats,
-  .codd-actor-list,
   .codd-config__tools {
+    grid-template-columns: 1fr;
+  }
+
+  .codd-victim-row {
     grid-template-columns: 1fr;
   }
 }

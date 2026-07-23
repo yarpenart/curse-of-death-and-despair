@@ -1,9 +1,9 @@
 <form class="codd-config" autocomplete="off">
   <section class="codd-config__schedule">
-    <i class="fa-solid fa-calendar-day"></i>
+    <i class="fa-solid fa-calendar-days"></i>
     <div>
-      <strong>{{localize "CODD.Config.NextAttack"}}</strong>
-      <span>{{nextAttack}}</span>
+      <strong>{{localize "CODD.Config.IndividualSchedules"}}</strong>
+      <span>{{localize "CODD.Config.IndividualSchedulesHint"}}</span>
     </div>
   </section>
 
@@ -13,17 +13,40 @@
   <div class="codd-actor-list">
     {{#if hasAvailableActors}}
       {{#each availableActors}}
-        <label class="codd-actor">
-          <input type="checkbox" name="victims" value="{{id}}" {{checked selected}}>
-          <img src="{{img}}" alt="">
-          <span class="codd-actor__name">{{name}}</span>
-          {{#if paladin}}
-            <span class="codd-tag">{{localize "CODD.Config.PaladinTag"}}</span>
-          {{/if}}
-          {{#if effect}}
-            <i class="fa-solid fa-droplet codd-actor__drained" title="{{effect}}"></i>
-          {{/if}}
-        </label>
+        <section class="codd-victim-row" data-codd-actor="{{id}}">
+          <label class="codd-actor">
+            <input type="checkbox" name="victims" value="{{id}}" {{checked selected}}>
+            <img src="{{img}}" alt="">
+            <span class="codd-actor__name">{{name}}</span>
+            {{#if paladin}}
+              <span class="codd-tag">{{localize "CODD.Config.PaladinTag"}}</span>
+            {{/if}}
+            {{#if effect}}
+              <i class="fa-solid fa-droplet codd-actor__drained" title="{{effect}}"></i>
+            {{/if}}
+          </label>
+
+          <div class="codd-date-fields" title="{{schedule}}">
+            <label>
+              <span>{{localize "CODD.Config.Year"}}</span>
+              <input type="number" value="{{year}}" data-codd-year data-codd-schedule-input>
+            </label>
+            <label>
+              <span>{{localize "CODD.Config.Month"}}</span>
+              <select data-codd-month data-codd-schedule-input>
+                {{#each months}}
+                  <option value="{{value}}" data-days="{{days}}" {{#if selected}}selected{{/if}}>
+                    {{name}}
+                  </option>
+                {{/each}}
+              </select>
+            </label>
+            <label>
+              <span>{{localize "CODD.Config.Day"}}</span>
+              <input type="number" min="1" max="{{selectedMonthDays}}" value="{{day}}" data-codd-day data-codd-schedule-input>
+            </label>
+          </div>
+        </section>
       {{/each}}
     {{else}}
       <p class="codd-empty">{{localize "CODD.Config.NoActors"}}</p>
