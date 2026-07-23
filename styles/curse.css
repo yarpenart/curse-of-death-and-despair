@@ -264,9 +264,13 @@
 }
 
 .codd-search {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 7px;
+  margin-top: -4px;
+  margin-bottom: 4px;
   padding: 0 8px;
   border: 1px solid var(--color-border-light-2);
   border-radius: 4px;
@@ -461,9 +465,10 @@
   background: rgb(20 13 15 / 90%);
   box-shadow: 0 3px 12px rgb(0 0 0 / 42%);
   backdrop-filter: blur(4px);
+  user-select: none;
 }
 
-.codd-quick-access button {
+.codd-quick-access__action {
   display: grid;
   width: 34px;
   height: 34px;
@@ -477,11 +482,63 @@
   font-size: 1rem;
 }
 
-.codd-quick-access button:hover,
-.codd-quick-access button:focus-visible {
+.codd-quick-access__action:hover,
+.codd-quick-access__action:focus-visible,
+.codd-quick-access__control:hover:not(:disabled),
+.codd-quick-access__control:focus-visible:not(:disabled) {
   border-color: #d2aa62;
   box-shadow: 0 0 7px rgb(210 170 98 / 35%);
   color: #fff0ce;
+}
+
+.codd-quick-access__controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgb(210 170 98 / 18%);
+}
+
+.codd-quick-access__control {
+  display: grid;
+  width: 15px;
+  min-width: 15px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgb(210 170 98 / 22%);
+  border-radius: 3px;
+  background: rgb(255 255 255 / 4%);
+  color: #b9a17a;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.codd-quick-access__drag {
+  cursor: grab;
+  touch-action: none;
+}
+
+.codd-quick-access__drag:active,
+.codd-quick-access--dragging .codd-quick-access__drag {
+  cursor: grabbing;
+}
+
+.codd-quick-access__drag:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.codd-quick-access--unlocked {
+  border-color: rgb(210 170 98 / 90%);
+  box-shadow:
+    0 0 0 1px rgb(210 170 98 / 25%),
+    0 3px 12px rgb(0 0 0 / 42%);
+}
+
+.codd-quick-access--dragging {
+  opacity: 0.9;
 }
 
 .codd-records {

@@ -126,6 +126,9 @@
   "CODD.QuickAccess.Label": "Szybki dostęp do Curse of Death and Despair",
   "CODD.QuickAccess.Records": "Otwórz dane klątwy",
   "CODD.QuickAccess.Configuration": "Otwórz ustawienia klątwy",
+  "CODD.QuickAccess.Drag": "Przeciągnij przyciski szybkiego dostępu",
+  "CODD.QuickAccess.LockPosition": "Zablokuj pozycję szybkiego dostępu",
+  "CODD.QuickAccess.UnlockPosition": "Odblokuj pozycję szybkiego dostępu",
 
   "CODD.Records.Title": "Dane klątwy",
   "CODD.Records.Victim": "Ofiara",
@@ -183,6 +186,7 @@
   "CODD.Notifications.EffectsRemoved": "Usunięto zarządzane efekty klątwy: {count}.",
   "CODD.Notifications.ConfigurationSaved": "Konfiguracja klątwy została zapisana.",
   "CODD.Notifications.RecordsSaved": "Dane klątwy i dostęp graczy zostały zapisane.",
+  "CODD.Notifications.QuickAccessSaveError": "Nie udało się zapisać pozycji szybkiego dostępu.",
   "CODD.Notifications.ScheduleReset": "Terminy ataków wszystkich ofiar zostały wyznaczone od bieżącego dnia kalendarza.",
   "CODD.Notifications.GlobalScheduleReset": "Wyznaczono następny atak wszystkich ofiar korzystających z ogólnego odstępu.",
   "CODD.Notifications.NotOwner": "Tylko właściciel ofiary lub MG może użyć tego przycisku.",

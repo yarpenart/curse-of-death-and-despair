@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2
+
+- Przesunięto samą wyszukiwarkę ofiar o 4 px w górę bez zmiany położenia pozostałych elementów konfiguratora.
+- Wyszukiwarka otrzymała wyższą warstwę interfejsu, dzięki czemu lista ofiar nie zasłania już pola ani nie przechwytuje kliknięć.
+- MG może odblokować panel szybkiego dostępu, przeciągnąć oba przyciski wspólnie w wybrane miejsce i ponownie zablokować ich pozycję.
+- Położenie oraz stan blokady są zapamiętywane lokalnie dla przeglądarki MG.
+- Po zmianie rozmiaru okna panel pozostaje w granicach widocznego obszaru.
+
 ## 0.3.1
 
 - Powiększono konfigurator do 780 × 800 px i włączono ręczne skalowanie okna.

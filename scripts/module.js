@@ -8,6 +8,11 @@ const MAX_MISSED_CYCLES = 20;
 const RULES_JOURNAL_FLAG = "rulesJournal";
 const RULES_PAGE_FLAG = "rulesPage";
 const PALADIN_SELF_AURA_LEVEL = 6;
+const DEFAULT_QUICK_ACCESS_STATE = Object.freeze({
+  left: 82,
+  top: 105,
+  locked: true
+});
 const RECORD_SHARE_FIELDS = Object.freeze([
   "totals",
   "criticals",
@@ -1693,25 +1698,107 @@ function openRecordsApplication(actorId = "") {
   recordsApplication.render(true);
 }
 
+function getQuickAccessState() {
+  const saved = game.settings.get(MODULE_ID, "quickAccessState");
+  return {
+    left: Number.isFinite(Number(saved?.left))
+      ? Number(saved.left)
+      : DEFAULT_QUICK_ACCESS_STATE.left,
+    top: Number.isFinite(Number(saved?.top))
+      ? Number(saved.top)
+      : DEFAULT_QUICK_ACCESS_STATE.top,
+    locked: saved?.locked !== false
+  };
+}
+
+function clampQuickAccessPosition(element, state) {
+  const rect = element.getBoundingClientRect();
+  const maximumLeft = Math.max(0, window.innerWidth - rect.width);
+  const maximumTop = Math.max(0, window.innerHeight - rect.height);
+  return {
+    ...state,
+    left: clamp(Math.round(Number(state.left) || 0), 0, maximumLeft),
+    top: clamp(Math.round(Number(state.top) || 0), 0, maximumTop)
+  };
+}
+
+function positionQuickAccess(element, state) {
+  const positioned = clampQuickAccessPosition(element, state);
+  element.style.left = `${positioned.left}px`;
+  element.style.top = `${positioned.top}px`;
+  return positioned;
+}
+
+function updateQuickAccessLock(element, state) {
+  const dragHandle = element.querySelector("[data-codd-quick-drag]");
+  const lockButton = element.querySelector("[data-codd-quick-lock]");
+  const lockIcon = lockButton?.querySelector("i");
+
+  element.classList.toggle("codd-quick-access--locked", state.locked);
+  element.classList.toggle("codd-quick-access--unlocked", !state.locked);
+  if (dragHandle) dragHandle.disabled = state.locked;
+  if (!lockButton) return;
+
+  const title = state.locked
+    ? localize("QuickAccess.UnlockPosition")
+    : localize("QuickAccess.LockPosition");
+  lockButton.title = title;
+  lockButton.setAttribute("aria-label", title);
+  lockButton.setAttribute("aria-pressed", String(state.locked));
+  lockIcon?.classList.toggle("fa-lock", state.locked);
+  lockIcon?.classList.toggle("fa-lock-open", !state.locked);
+}
+
+async function saveQuickAccessState(state) {
+  await game.settings.set(MODULE_ID, "quickAccessState", {
+    left: Math.round(state.left),
+    top: Math.round(state.top),
+    locked: Boolean(state.locked)
+  });
+}
+
 function renderQuickAccess() {
   if (typeof document === "undefined") return;
   if (document.getElementById(`${MODULE_ID}-quick-access`)) return;
 
+  let state = getQuickAccessState();
   const element = document.createElement("nav");
   element.id = `${MODULE_ID}-quick-access`;
   element.className = "codd-quick-access";
   element.setAttribute("aria-label", localize("QuickAccess.Label"));
   element.innerHTML = `
-    <button type="button" data-codd-open="records" title="${escapeHtml(localize("QuickAccess.Records"))}">
+    ${game.user?.isGM ? `
+      <div class="codd-quick-access__controls">
+        <button
+          type="button"
+          class="codd-quick-access__control codd-quick-access__drag"
+          data-codd-quick-drag
+          title="${escapeHtml(localize("QuickAccess.Drag"))}"
+          aria-label="${escapeHtml(localize("QuickAccess.Drag"))}"
+        >
+          <i class="fa-solid fa-grip-lines"></i>
+        </button>
+        <button
+          type="button"
+          class="codd-quick-access__control"
+          data-codd-quick-lock
+        >
+          <i class="fa-solid fa-lock"></i>
+        </button>
+      </div>
+    ` : ""}
+    <button type="button" class="codd-quick-access__action" data-codd-open="records" title="${escapeHtml(localize("QuickAccess.Records"))}">
       <i class="fa-solid fa-book-skull"></i>
     </button>
     ${game.user?.isGM ? `
-      <button type="button" data-codd-open="configuration" title="${escapeHtml(localize("QuickAccess.Configuration"))}">
+      <button type="button" class="codd-quick-access__action" data-codd-open="configuration" title="${escapeHtml(localize("QuickAccess.Configuration"))}">
         <i class="fa-solid fa-gears"></i>
       </button>
     ` : ""}
   `;
   document.body.append(element);
+  state = positionQuickAccess(element, state);
+  updateQuickAccessLock(element, state);
 
   element.querySelector('[data-codd-open="records"]')?.addEventListener(
     "click",
@@ -1721,6 +1808,63 @@ function renderQuickAccess() {
     "click",
     () => openConfigurationApplication()
   );
+
+  const lockButton = element.querySelector("[data-codd-quick-lock]");
+  const dragHandle = element.querySelector("[data-codd-quick-drag]");
+  lockButton?.addEventListener("click", async () => {
+    state.locked = !state.locked;
+    updateQuickAccessLock(element, state);
+    try {
+      await saveQuickAccessState(state);
+    } catch (error) {
+      console.error(`${MODULE_ID} | Could not save the quick-access lock.`, error);
+      ui.notifications.error(localize("Notifications.QuickAccessSaveError"));
+    }
+  });
+
+  dragHandle?.addEventListener("pointerdown", (event) => {
+    if (state.locked || event.button !== 0) return;
+    event.preventDefault();
+
+    const pointerId = event.pointerId;
+    const startRect = element.getBoundingClientRect();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    element.classList.add("codd-quick-access--dragging");
+    dragHandle.setPointerCapture?.(pointerId);
+
+    const move = (moveEvent) => {
+      if (moveEvent.pointerId !== pointerId) return;
+      state = positionQuickAccess(element, {
+        ...state,
+        left: startRect.left + moveEvent.clientX - startX,
+        top: startRect.top + moveEvent.clientY - startY
+      });
+    };
+
+    const finish = async (finishEvent) => {
+      if (finishEvent.pointerId !== pointerId) return;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      element.classList.remove("codd-quick-access--dragging");
+      dragHandle.releasePointerCapture?.(pointerId);
+      try {
+        await saveQuickAccessState(state);
+      } catch (error) {
+        console.error(`${MODULE_ID} | Could not save the quick-access position.`, error);
+        ui.notifications.error(localize("Notifications.QuickAccessSaveError"));
+      }
+    };
+
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+  });
+
+  window.addEventListener("resize", () => {
+    state = positionQuickAccess(element, state);
+  });
 }
 
 function getAssociatedSpellFromDamageOptions(options) {
@@ -2080,6 +2224,13 @@ function registerSettings() {
     config: false,
     type: Object,
     default: {}
+  });
+
+  game.settings.register(MODULE_ID, "quickAccessState", {
+    scope: "client",
+    config: false,
+    type: Object,
+    default: DEFAULT_QUICK_ACCESS_STATE
   });
 
   // Retained only to migrate schedules created by versions before 0.2.0.

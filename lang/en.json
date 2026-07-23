@@ -126,6 +126,9 @@
   "CODD.QuickAccess.Label": "Curse of Death and Despair quick access",
   "CODD.QuickAccess.Records": "Open curse records",
   "CODD.QuickAccess.Configuration": "Open curse settings",
+  "CODD.QuickAccess.Drag": "Drag the quick-access buttons",
+  "CODD.QuickAccess.LockPosition": "Lock the quick-access position",
+  "CODD.QuickAccess.UnlockPosition": "Unlock the quick-access position",
 
   "CODD.Records.Title": "Curse records",
   "CODD.Records.Victim": "Victim",
@@ -183,6 +186,7 @@
   "CODD.Notifications.EffectsRemoved": "Removed {count} managed curse effect(s).",
   "CODD.Notifications.ConfigurationSaved": "Curse configuration saved.",
   "CODD.Notifications.RecordsSaved": "Curse records and player access have been saved.",
+  "CODD.Notifications.QuickAccessSaveError": "The quick-access position could not be saved.",
   "CODD.Notifications.ScheduleReset": "Every victim's curse schedule has been reset from the current calendar day.",
   "CODD.Notifications.GlobalScheduleReset": "The next attack was recalculated for every victim using the global interval.",
   "CODD.Notifications.NotOwner": "Only the victim's owner or a GM can use this button.",
