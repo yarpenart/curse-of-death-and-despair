@@ -49,6 +49,7 @@ Dostępne ustawienia:
 - Formuła utraty cechy — domyślnie `1d4`.
 - Domyślny tryb rzutów postaci graczy — publiczny, prywatny MG, ślepy MG albo prywatny. Każda ofiara może otrzymać własny Roll Mode bezpośrednio na liście.
 - Kara do leczenia z zaklęć — domyślnie 3 PW.
+- Zakres kary do leczenia — tylko ofiary klątwy albo wszystkie postacie; domyślnie tylko ofiary.
 - `Skonfiguruj ofiary` — wybór przeklętych postaci, osobnych odstępów między atakami i źródła Aury Ochrony.
 
 Lista ofiar zawiera wyszukiwarkę podpowiadającą postacie, osobny Roll Mode każdej postaci oraz jej indywidualną liczbę dni między atakami. Przycisk z ikoną powrotu przywraca danej ofierze ogólną wartość. Ustawienia ST, szansy na paladyna, ogólnego odstępu dni, utraty cechy, awaryjnej aury i kary leczenia są też dostępne w zwijanej sekcji tego samego panelu.
@@ -81,7 +82,7 @@ Dla każdej ofiary moduł zapisuje:
 
 MG może edytować lub usuwać poszczególne wpisy, ręcznie poprawiać podsumowanie albo przeliczyć je z historii. Udostępnianie jest ustawiane osobno dla każdej ofiary i każdego gracza w kategoriach: podsumowanie, wyniki naturalne, paladyn i aura, poszczególne rzuty, atakowane cechy oraz utrata cech.
 
-Ofiary klątwy otrzymują o skonfigurowaną wartość mniej PW z każdego zastosowanego leczenia pochodzącego z zaklęcia. Krótki i długi odpoczynek oraz eliksiry i mikstury nie są objęte tym efektem.
+MG wybiera, czy kara obejmuje wyłącznie ofiary klątwy, czy wszystkie postacie w świecie. Objęte nią postacie otrzymują o skonfigurowaną wartość mniej PW z każdego zastosowanego leczenia pochodzącego z zaklęcia. Krótki i długi odpoczynek oraz eliksiry i mikstury nie są objęte tym efektem.
 
 ## Zdjęcie klątwy
 

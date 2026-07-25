@@ -1267,7 +1267,25 @@ class CurseConfiguration extends FormApplication {
         ),
         spellHealingPenalty: Number(
           game.settings.get(MODULE_ID, "spellHealingPenalty")
-        ) || 0
+        ) || 0,
+        spellHealingScope: String(
+          game.settings.get(MODULE_ID, "spellHealingScope") || "victims"
+        ),
+        spellHealingScopeOptions: [
+          {
+            value: "victims",
+            label: localize("Settings.SpellHealingScope.Victims")
+          },
+          {
+            value: "everyone",
+            label: localize("Settings.SpellHealingScope.Everyone")
+          }
+        ].map((option) => ({
+          ...option,
+          selected: option.value === String(
+            game.settings.get(MODULE_ID, "spellHealingScope") || "victims"
+          )
+        }))
       }
     };
   }
@@ -1370,7 +1388,8 @@ class CurseConfiguration extends FormApplication {
       fallbackAuraBonus: "number",
       intervalDays: "number",
       abilityLossFormula: "string",
-      spellHealingPenalty: "number"
+      spellHealingPenalty: "number",
+      spellHealingScope: "string"
     };
     suppressGlobalIntervalReset = true;
     try {
@@ -1936,7 +1955,12 @@ function getAssociatedSpellFromDamageOptions(options) {
 
 function reduceSpellHealing(actor, amount, updates, options) {
   if (!actor || Number(amount) >= 0) return;
-  if (!getSelectedVictimIds().includes(actor.id)) return;
+  const healingScope = String(
+    game.settings.get(MODULE_ID, "spellHealingScope") || "victims"
+  );
+  if (healingScope !== "everyone" && !getSelectedVictimIds().includes(actor.id)) {
+    return;
+  }
 
   const penalty = Math.max(
     0,
@@ -1968,6 +1992,12 @@ function buildRulesJournalContent() {
     0,
     Number(game.settings.get(MODULE_ID, "spellHealingPenalty")) || 0
   );
+  const healingScope = String(
+    game.settings.get(MODULE_ID, "spellHealingScope") || "victims"
+  );
+  const healingRule = healingScope === "everyone"
+    ? "Rules.HealingEveryone"
+    : "Rules.HealingVictims";
   const rollModeDescriptions = getSelectedVictims()
     .map((actor) => format("Rules.VictimRollMode", {
       actor: escapeHtml(actor.name),
@@ -1999,7 +2029,7 @@ function buildRulesJournalContent() {
         <li>${escapeHtml(localize("Rules.NaturalTwenty"))}</li>
       </ul>
       <h2>${escapeHtml(localize("Rules.HealingHeading"))}</h2>
-      <p>${format("Rules.Healing", { penalty: healingPenalty })}</p>
+      <p>${format(healingRule, { penalty: healingPenalty })}</p>
       <p>${escapeHtml(localize("Rules.HealingExceptions"))}</p>
       <h2>${escapeHtml(localize("Rules.CurrentHeading"))}</h2>
       <ul>
@@ -2227,6 +2257,20 @@ function registerSettings() {
       max: 20,
       step: 1
     },
+    onChange: scheduleRulesJournalUpdate
+  });
+
+  game.settings.register(MODULE_ID, "spellHealingScope", {
+    name: "CODD.Settings.SpellHealingScope.Name",
+    hint: "CODD.Settings.SpellHealingScope.Hint",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      victims: "CODD.Settings.SpellHealingScope.Victims",
+      everyone: "CODD.Settings.SpellHealingScope.Everyone"
+    },
+    default: "victims",
     onChange: scheduleRulesJournalUpdate
   });
 

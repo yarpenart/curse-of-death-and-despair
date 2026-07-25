@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.8
+
+- Dodano ustawienie MG określające zakres kary do leczenia z zaklęć: tylko ofiary klątwy albo wszystkie postacie.
+- Dotychczasowy zakres „tylko ofiary klątwy” pozostaje ustawieniem domyślnym, więc aktualizacja nie zmienia istniejących zasad świata.
+- Zakres można wybrać zarówno w ustawieniach modułu, jak i w sekcji ustawień zasad w konfiguratorze klątwy.
+- Odpoczynki, eliksiry i mikstury nadal nie podlegają karze.
+- Journal zasad pokazuje aktualnie wybrany zakres kary do leczenia.
+
 ## 0.3.7
 
 - W konfiguracji klątwy zapisane ofiary są wyświetlane na górze listy, a pozostałe postacie poniżej.

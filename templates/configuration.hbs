@@ -116,6 +116,14 @@
         <span>{{localize "CODD.Config.HealingPenalty"}}</span>
         <input type="number" min="0" max="20" value="{{settings.spellHealingPenalty}}" data-codd-setting="spellHealingPenalty">
       </label>
+      <label>
+        <span>{{localize "CODD.Config.HealingScope"}}</span>
+        <select data-codd-setting="spellHealingScope">
+          {{#each settings.spellHealingScopeOptions}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </label>
     </div>
   </details>
 
