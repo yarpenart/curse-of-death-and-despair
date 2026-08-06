@@ -21,6 +21,7 @@ const RECORD_SHARE_FIELDS = Object.freeze([
   "abilities",
   "losses"
 ]);
+const LegacyFormApplication = foundry.appv1?.api?.FormApplication ?? globalThis.FormApplication;
 
 const ABILITY_BY_D6 = Object.freeze({
   1: "str",
@@ -1179,7 +1180,7 @@ async function removeManagedCurseEffects(actorIds = getSelectedVictimIds()) {
   ui.notifications.info(format("Notifications.EffectsRemoved", { count: removed }));
 }
 
-class CurseConfiguration extends FormApplication {
+class CurseConfiguration extends LegacyFormApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: `${MODULE_ID}-configuration`,
@@ -1355,8 +1356,8 @@ class CurseConfiguration extends FormApplication {
       const actorIds = html.find('input[name="victims"]:checked')
         .map((_, input) => input.value)
         .get();
-      const confirmed = await Dialog.confirm({
-        title: localize("Config.RemoveEffectsTitle"),
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: localize("Config.RemoveEffectsTitle") },
         content: `<p>${escapeHtml(localize("Config.RemoveEffectsConfirm"))}</p>`
       });
       if (!confirmed) return;
@@ -1468,7 +1469,7 @@ function getRecordsActorIds() {
   ])].filter((actorId) => game.actors.get(actorId));
 }
 
-class CurseRecords extends FormApplication {
+class CurseRecords extends LegacyFormApplication {
   constructor(object = {}, options = {}) {
     super(object, options);
     this.selectedActorId = options.actorId ?? "";
@@ -1641,8 +1642,8 @@ class CurseRecords extends FormApplication {
 
     html.find('[data-action="delete-record"]').on("click", async (event) => {
       if (!game.user.isGM) return;
-      const confirmed = await Dialog.confirm({
-        title: localize("Records.DeleteTitle"),
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: localize("Records.DeleteTitle") },
         content: `<p>${escapeHtml(localize("Records.DeleteConfirm"))}</p>`
       });
       if (!confirmed) return;
@@ -2399,7 +2400,7 @@ Hooks.once("ready", async () => {
     });
   });
 
-  Hooks.on("renderChatMessage", activateChatCardListeners);
+  Hooks.on("renderChatMessageHTML", activateChatCardListeners);
   registerCalendarHooks();
   renderQuickAccess();
 
