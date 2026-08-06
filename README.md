@@ -2,9 +2,9 @@
 
 Moduł dla:
 
-- Foundry Virtual Tabletop 13, build 351
+- Foundry Virtual Tabletop 14, build 365
 - D&D5e 5.3.3
-- Simple Calendar Reborn 2.5.5 (wydanie dla Foundry 13)
+- Simple Calendar Reborn 2.6.0+ (zweryfikowano 2.6.1 dla Foundry 14)
 - Dice So Nice
 
 ## Działanie

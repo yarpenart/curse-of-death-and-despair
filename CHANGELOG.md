@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.11
+
+- Migracja manifestu do Foundry VTT 14 Build 365.
+- Zmieniono hook kart czatu na `renderChatMessageHTML` wymagany przez V14.
+- Zaktualizowano wymaganą wersję Simple Calendar Reborn do 2.6.0+ (zweryfikowano 2.6.1).
+
 ## 0.3.8
 
 - Dodano ustawienie MG określające zakres kary do leczenia z zaklęć: tylko ofiary klątwy albo wszystkie postacie.
