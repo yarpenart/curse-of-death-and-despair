@@ -207,26 +207,73 @@
 }
 
 :is(.codd-config, .codd-records) {
-  --codd-window-text: #f3eeee;
-  --codd-window-muted: #c8bfc1;
+  --codd-window-text: #e9edf5;
+  --codd-window-muted: #aab3c5;
+  --codd-window-panel: #151923;
+  --codd-window-panel-2: #202636;
+  --codd-window-control: #0e1219;
+  --codd-window-line: #3b4356;
+  --codd-window-accent: #f0bd65;
+  --codd-window-danger: #ff8f97;
   color: var(--codd-window-text);
   color-scheme: dark;
 }
 
-body:has(#interface.theme-light) :is(.codd-config, .codd-records) {
-  --codd-window-text: #2d2526;
-  --codd-window-muted: #665b5d;
-  color-scheme: light;
+#curse-of-death-and-despair-configuration .window-content,
+#curse-of-death-and-despair-records .window-content {
+  color: #e9edf5;
+  background:
+    radial-gradient(circle at 90% 0%, rgb(127 16 24 / 18%), transparent 38%),
+    linear-gradient(145deg, #10131a, #191e29 65%, #11151d) !important;
+  scrollbar-color: #b8424c #11151d;
 }
 
-body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
-  --codd-window-text: #f3eeee;
-  --codd-window-muted: #c8bfc1;
-  color-scheme: dark;
+:is(.codd-config, .codd-records) :where(h1, h2, h3, h4, label, strong, span, p, dt, dd) {
+  color: inherit;
 }
 
-:is(.codd-config, .codd-records) :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea, button) {
+:is(.codd-config, .codd-records) :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  border: 1px solid #485168;
   color: var(--codd-window-text);
+  background: var(--codd-window-control);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 35%);
+}
+
+:is(.codd-config, .codd-records) :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  border-color: var(--codd-window-accent);
+  outline: 1px solid rgb(240 189 101 / 35%);
+}
+
+:is(.codd-config, .codd-records) select option {
+  color: var(--codd-window-text);
+  background: var(--codd-window-control);
+}
+
+:is(.codd-config, .codd-records) button {
+  border: 1px solid #485168;
+  color: var(--codd-window-text);
+  background: var(--codd-window-panel-2);
+  box-shadow: none;
+}
+
+:is(.codd-config, .codd-records) button:hover:not(:disabled),
+:is(.codd-config, .codd-records) button:focus-visible:not(:disabled) {
+  border-color: var(--codd-window-accent);
+  color: var(--codd-window-text);
+  background: #293145;
+  box-shadow: 0 0 0 1px rgb(240 189 101 / 20%);
+}
+
+:is(.codd-config, .codd-records) :where(input, select, textarea, button):disabled {
+  cursor: not-allowed;
+  border-color: #30384a;
+  color: #8790a1;
+  background: #191e29;
+  opacity: 1;
+}
+
+:is(.codd-config, .codd-records) input[type="checkbox"] {
+  accent-color: #b8424c;
 }
 
 :is(.codd-config, .codd-records) :where(input, textarea)::placeholder,
@@ -265,13 +312,13 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
   align-items: center;
   gap: 9px;
   padding: 8px 10px;
-  border: 1px solid var(--color-border-light-2);
+  border: 1px solid var(--codd-window-line);
   border-radius: 5px;
-  background: rgb(127 16 24 / 8%);
+  background: var(--codd-window-panel-2);
 }
 
 .codd-config__schedule > i {
-  color: #8e1d27;
+  color: var(--codd-window-danger);
   font-size: 1.5rem;
 }
 
@@ -279,6 +326,10 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.codd-config__schedule span {
+  color: var(--codd-window-muted);
 }
 
 .codd-actor-list {
@@ -301,18 +352,18 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
   margin-top: -52px;
   margin-bottom: 52px;
   padding: 0 8px;
-  border: 1px solid var(--color-border-light-2);
+  border: 1px solid var(--codd-window-line);
   border-radius: 4px;
-  background: rgb(255 255 255 / 8%);
+  background: var(--codd-window-control);
 }
 
 .codd-search:focus-within {
-  border-color: #8e1d27;
-  box-shadow: 0 0 0 1px rgb(142 29 39 / 35%);
+  border-color: var(--codd-window-accent);
+  box-shadow: 0 0 0 1px rgb(240 189 101 / 35%);
 }
 
 .codd-search > i {
-  color: #8e1d27;
+  color: var(--codd-window-danger);
 }
 
 .codd-search input {
@@ -321,6 +372,7 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
   border: 0;
   background: transparent;
   box-shadow: none;
+  outline: 0;
 }
 
 .codd-victim-row {
@@ -329,8 +381,9 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
   gap: 8px;
   align-items: end;
   padding: 6px;
-  border: 1px solid var(--color-border-light-2);
+  border: 1px solid var(--codd-window-line);
   border-radius: 4px;
+  background: var(--codd-window-panel);
 }
 
 .codd-actor {
@@ -343,7 +396,8 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
 }
 
 .codd-victim-row:hover {
-  background: rgb(127 16 24 / 8%);
+  border-color: #5a3440;
+  background: #202633;
 }
 
 .codd-actor img {
@@ -370,7 +424,7 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
 }
 
 .codd-actor__drained {
-  color: #a71f2b;
+  color: var(--codd-window-danger);
 }
 
 .codd-empty {
@@ -406,12 +460,7 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
   min-height: 28px;
   height: 28px;
   padding: 0;
-  color: #755423;
-}
-
-.codd-interval-field :disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+  color: var(--codd-window-accent);
 }
 
 .codd-roll-mode-field {
@@ -429,19 +478,17 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
   font-size: 0.8rem;
 }
 
-.codd-roll-mode-field select:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 .codd-settings-panel {
-  border: 1px solid var(--color-border-light-2);
+  border: 1px solid var(--codd-window-line);
   border-radius: 4px;
+  background: var(--codd-window-panel);
 }
 
 .codd-settings-panel summary {
   padding: 7px 9px;
   cursor: pointer;
+  color: var(--codd-window-text);
+  background: var(--codd-window-panel-2);
   font-weight: 700;
 }
 
@@ -476,8 +523,23 @@ body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
 }
 
 .codd-danger-button {
-  border-color: #8e1e27;
-  color: #8e1e27;
+  border-color: #a43b45 !important;
+  color: var(--codd-window-danger) !important;
+  background: #28161d !important;
+}
+
+.codd-danger-button:hover:not(:disabled),
+.codd-danger-button:focus-visible:not(:disabled) {
+  border-color: #e06a74 !important;
+  background: #3a1a22 !important;
+}
+
+.codd-config .form-group {
+  border-color: var(--codd-window-line);
+}
+
+.codd-config .sheet-footer {
+  border-color: var(--codd-window-line);
 }
 
 .codd-quick-access {
