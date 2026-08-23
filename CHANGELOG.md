@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.12
+
+- Konfigurator i Historia rzutów używają teraz jasnego tekstu w ciemnym motywie oraz ciemnego tekstu w jasnym motywie Foundry.
+- Poprawiono kontrast opisów pomocniczych, etykiet, pól formularza i przycisków bez zmiany ciemnych kart klątwy na czacie.
+
 ## 0.3.11
 
 - Migracja manifestu do Foundry VTT 14 Build 365.
