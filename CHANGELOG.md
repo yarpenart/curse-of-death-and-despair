@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.13
+
+- Konfigurator klątwy i Historia rzutów otrzymały stałe ciemne tło oraz jasny tekst, zgodne wizualnie z modułem Stat Shift.
+- Ciemny wygląd nie zależy już od wybranego jasnego lub ciemnego motywu Foundry.
+- Poprawiono kontrast paneli, wierszy ofiar, wyszukiwarki, pól formularza, przycisków i opisów pomocniczych.
+- Wyłączone pola zachowują pełną czytelność zamiast być ukrywane przez obniżoną przezroczystość.
+
 ## 0.3.12
 
 - Konfigurator i Historia rzutów używają teraz jasnego tekstu w ciemnym motywie oraz ciemnego tekstu w jasnym motywie Foundry.
