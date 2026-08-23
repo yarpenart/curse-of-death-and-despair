@@ -206,6 +206,35 @@
   opacity: 0.6;
 }
 
+:is(.codd-config, .codd-records) {
+  --codd-window-text: #f3eeee;
+  --codd-window-muted: #c8bfc1;
+  color: var(--codd-window-text);
+  color-scheme: dark;
+}
+
+body:has(#interface.theme-light) :is(.codd-config, .codd-records) {
+  --codd-window-text: #2d2526;
+  --codd-window-muted: #665b5d;
+  color-scheme: light;
+}
+
+body:has(#interface.theme-dark) :is(.codd-config, .codd-records) {
+  --codd-window-text: #f3eeee;
+  --codd-window-muted: #c8bfc1;
+  color-scheme: dark;
+}
+
+:is(.codd-config, .codd-records) :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea, button) {
+  color: var(--codd-window-text);
+}
+
+:is(.codd-config, .codd-records) :where(input, textarea)::placeholder,
+:is(.codd-config, .codd-records) :where(.hint, .notes) {
+  color: var(--codd-window-muted);
+  opacity: 1;
+}
+
 .codd-config {
   display: flex;
   flex-direction: column;
@@ -354,7 +383,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  color: var(--color-text-dark-secondary);
+  color: var(--codd-window-muted);
   font-size: 0.7rem;
 }
 
@@ -389,7 +418,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  color: var(--color-text-dark-secondary);
+  color: var(--codd-window-muted);
   font-size: 0.7rem;
 }
 
@@ -629,7 +658,7 @@
 
 .codd-section-heading p,
 .codd-sharing > p {
-  color: var(--color-text-dark-secondary);
+  color: var(--codd-window-muted);
   font-size: 0.78rem;
 }
 
@@ -716,7 +745,7 @@
 }
 
 .codd-history__title > span {
-  color: var(--color-text-dark-secondary);
+  color: var(--codd-window-muted);
   font-size: 0.7rem;
 }
 
@@ -728,7 +757,7 @@
 .codd-history__outcome {
   grid-column: 4;
   justify-self: end;
-  color: var(--color-text-dark-secondary);
+  color: var(--codd-window-muted);
   font-size: 0.78rem;
 }
 
@@ -757,7 +786,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  color: var(--color-text-dark-secondary);
+  color: var(--codd-window-muted);
   font-size: 0.7rem;
 }
 
@@ -791,7 +820,7 @@
 }
 
 .codd-history-view dt {
-  color: var(--color-text-dark-secondary);
+  color: var(--codd-window-muted);
   font-size: 0.68rem;
   text-transform: uppercase;
 }
