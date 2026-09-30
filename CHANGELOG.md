@@ -1,8 +1,15 @@
 # Changelog
 
+## 0.3.14
+
+- Skrót klątwy jest widoczny graczowi tylko wtedy, gdy kontroluje postać aktualnie oznaczoną jako ofiara klątwy.
+- Gracze z przypisaną klątwą otrzymali własne przeciąganie i kłódkę skrótu, z pozycją zapisywaną po stronie klienta.
+- Skrót odświeża widoczność natychmiast po zmianie listy ofiar.
+- Zweryfikowano zgodność manifestu i składni z Foundry VTT 14 Build 365.
+
 ## 0.3.13
 
-- Konfigurator klątwy i Historia rzutów otrzymały stałe ciemne tło oraz jasny tekst, zgodne wizualnie z modułem Stat Shift.
+- Konfigurator klątwy i Historia rzutów otrzymały stałe ciemne tło oraz jasny tekst, zgodny wizualnie z modułem Stat Shift.
 - Ciemny wygląd nie zależy już od wybranego jasnego lub ciemnego motywu Foundry.
 - Poprawiono kontrast paneli, wierszy ofiar, wyszukiwarki, pól formularza, przycisków i opisów pomocniczych.
 - Wyłączone pola zachowują pełną czytelność zamiast być ukrywane przez obniżoną przezroczystość.
@@ -34,7 +41,7 @@
 
 ## 0.3.6
 
-- Każdy atak w Historii rzutów można niezależnie rozwinąć i zwinąć.
+- Każdy atak w Historii rzutów można niezależnie rozwinąć i zwinąĆ.
 - Zwarte nagłówki pokazują numer ataku, datę, atakowaną cechę i wynik, dzięki czemu łatwiej znaleźć konkretny wpis.
 - Historia otwiera się z wpisami domyślnie zwiniętymi, a stan rozwinięcia pozostaje zachowany podczas pracy w oknie.
 - Zwijanie działa zarówno w edytowalnym widoku MG, jak i w udostępnionym widoku gracza, z zachowaniem ustawień widoczności danych.
@@ -71,13 +78,13 @@
 - Dodano osobną liczbę dni między atakami dla każdej ofiary oraz przycisk przywracający wartość ogólną.
 - Ogólna liczba dni pozostaje wartością domyślną dla ofiar bez indywidualnego odstępu.
 - Zmiana odstępu konkretnej ofiary wyznacza jej następny atak od bieżącego dnia, a niezmienione harmonogramy zachowują dotychczasowy termin.
-- Istniejące terminy z wersji 0.3.0 są zachowywane podczas aktualizacji i nadal obsługiwane wewnętrznie przez Simple Calendar Reborn.
-- Journal zasad pokazuje wartość ogólną i efektywne odstępy poszczególnych ofiar bez ujawniania dat następnych ataków.
+- Istniejące terminy z wersji 0.3.0 są zachowywane podczas aktualizacji i nadal obsługiwane wewnętrznie przez Simple Calendar Reborn4.
+- Journal zasad pokazauje wartość ogónną i efektywny odstępy poszczególnych ofiar bez ujawniania dat następnych ataków.
 
 ## 0.3.0
 
 - Przebudowano listę ofiar zgodnie z makietą: dodano wyszukiwarkę, osobny Roll Mode każdej ofiary oraz zachowano indywidualne pola daty.
-- Ofiara mająca co najmniej 6 poziomów paladyna automatycznie otrzymuje własną Aurę Ochrony i nie wykonuje testu bliskości.
+- Ofiara mająca co najmniej 6 poziomów paladyna automatycznie otrzymuje własną urę Ochrony i nie wykunje testu bliskości.
 - Dodano trwałe statystyki i pełną historię rzutów osobno dla każdej ofiary.
 - Historia zachowuje wyniki testu paladyna, losowania cechy, save’a i utraty cechy, a także atakowaną cechę, premię aury oraz wynik ataku.
 - MG może edytować lub usuwać wpisy historii, poprawiać sumy i przeliczać je ponownie z zachowanych rzutów.
@@ -110,7 +117,7 @@
 - Obsługa wielu ofiar i automatyczne zapobieganie podwójnym wyzwoleniom.
 - Losowanie obecności paladyna, atakowanej cechy i utraty punktów cechy.
 - Rzuty obronne D&D5e z tymczasową premią Aury Ochrony.
-- Odwracalny, kumulujący się Active Effect utraty cech.
+- Odwracalny, kumulujący się Active Effect utraty cechu.
 - Integracja z Dice So Nice poprzez standardowe rzuty Foundry.
 - Konfiguracja, test ręczny, reset harmonogramu i czyszczenie efektów.
 - Tłumaczenia polskie i angielskie.
