@@ -1,3 +1,5 @@
+import { hasAssignedCurseAccess } from "./quick-access.mjs";
+
 const MODULE_ID = "curse-of-death-and-despair";
 const SOCKET_NAME = `module.${MODULE_ID}`;
 const ICON_PATH = `modules/${MODULE_ID}/assets/curse.svg`;
@@ -45,6 +47,7 @@ let journalUpdateTimer = null;
 let configurationApplication = null;
 let recordsApplication = null;
 let suppressGlobalIntervalReset = false;
+let quickAccessAbortController = null;
 
 function localize(key) {
   return game.i18n.localize(`CODD.${key}`);
@@ -1831,36 +1834,49 @@ async function saveQuickAccessState(state) {
   });
 }
 
+function canShowQuickAccess() {
+  return hasAssignedCurseAccess({
+    isGM: Boolean(game.user?.isGM),
+    victimActorIds: getSelectedVictimIds(),
+    getActor: actorId => game.actors.get(actorId),
+    ownsActor: actor => canControlActor(actor)
+  });
+}
+
 function renderQuickAccess() {
   if (typeof document === "undefined") return;
-  if (document.getElementById(`${MODULE_ID}-quick-access`)) return;
+  quickAccessAbortController?.abort();
+  quickAccessAbortController = null;
+  document.getElementById(`${MODULE_ID}-quick-access`)?.remove();
+  if (!canShowQuickAccess()) return;
 
+  const controller = new AbortController();
+  quickAccessAbortController = controller;
+  const { signal } = controller;
   let state = getQuickAccessState();
   const element = document.createElement("nav");
   element.id = `${MODULE_ID}-quick-access`;
   element.className = "codd-quick-access";
   element.setAttribute("aria-label", localize("QuickAccess.Label"));
   element.innerHTML = `
-    ${game.user?.isGM ? `
-      <div class="codd-quick-access__controls">
-        <button
-          type="button"
-          class="codd-quick-access__control codd-quick-access__drag"
-          data-codd-quick-drag
-          title="${escapeHtml(localize("QuickAccess.Drag"))}"
-          aria-label="${escapeHtml(localize("QuickAccess.Drag"))}"
-        >
-          <i class="fa-solid fa-grip-lines"></i>
-        </button>
-        <button
-          type="button"
-          class="codd-quick-access__control"
-          data-codd-quick-lock
-        >
-          <i class="fa-solid fa-lock"></i>
-        </button>
-      </div>
-    ` : ""}
+    <div class="codd-quick-access__controls">
+      <button
+        type="button"
+        class="codd-quick-access__control codd-quick-access__drag"
+        data-codd-quick-drag
+        title="${escapeHtml(localize("QuickAccess.Drag"))}"
+        aria-label="${escapeHtml(localize("QuickAccess.Drag"))}"
+      >
+        <i class="fa-solid fa-grip-lines"></i>
+      </button>
+      <button
+        type="button"
+        class="codd-quick-access__control"
+        data-codd-quick-lock
+      >
+        <i class="fa-solid fa-lock"></i>
+      </button>
+    </div>
     <button type="button" class="codd-quick-access__action" data-codd-open="records" title="${escapeHtml(localize("QuickAccess.Records"))}">
       <i class="fa-solid fa-book-skull"></i>
     </button>
@@ -1876,11 +1892,13 @@ function renderQuickAccess() {
 
   element.querySelector('[data-codd-open="records"]')?.addEventListener(
     "click",
-    () => openRecordsApplication()
+    () => openRecordsApplication(),
+    { signal }
   );
   element.querySelector('[data-codd-open="configuration"]')?.addEventListener(
     "click",
-    () => openConfigurationApplication()
+    () => openConfigurationApplication(),
+    { signal }
   );
 
   const lockButton = element.querySelector("[data-codd-quick-lock]");
@@ -1894,7 +1912,7 @@ function renderQuickAccess() {
       console.error(`${MODULE_ID} | Could not save the quick-access lock.`, error);
       ui.notifications.error(localize("Notifications.QuickAccessSaveError"));
     }
-  });
+  }, { signal });
 
   dragHandle?.addEventListener("pointerdown", (event) => {
     if (state.locked || event.button !== 0) return;
@@ -1931,14 +1949,14 @@ function renderQuickAccess() {
       }
     };
 
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", finish);
-    window.addEventListener("pointercancel", finish);
-  });
+    window.addEventListener("pointermove", move, { signal });
+    window.addEventListener("pointerup", finish, { signal });
+    window.addEventListener("pointercancel", finish, { signal });
+  }, { signal });
 
   window.addEventListener("resize", () => {
     state = positionQuickAccess(element, state);
-  });
+  }, { signal });
 }
 
 function getAssociatedSpellFromDamageOptions(options) {
@@ -2279,7 +2297,8 @@ function registerSettings() {
     scope: "world",
     config: false,
     type: Array,
-    default: []
+    default: [],
+    onChange: renderQuickAccess
   });
 
   game.settings.register(MODULE_ID, "paladinActorId", {
